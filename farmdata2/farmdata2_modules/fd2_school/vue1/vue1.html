@@ -1,0 +1,86 @@
+<html>
+    <h1>Harvest Report</h1>
+    <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
+
+    <div id="harvest-report" v-cloak>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" v-model="rptTitle">
+
+        <br><br>
+        
+        <label for="start">Start:</label>
+        <input type="date" id="start" min="2014-01-01" max="2022-01-01" v-model="rptStart">
+
+        <label for="end">End:</label>
+        <input type="date" id="end" min="2020-05-05" max="2022-01-01" v-model="rptEnd">
+
+        <br><br>
+        
+        <label for="crop">Crop:</label>
+        <select id="crop" name="crop" v-model="rptCrop">
+            <option v-for="crop in rptCropList">{{crop}}</option>
+        </select>
+
+        <label for="area">Area:</label>
+        <select id="area" name="area">
+            <option v-for="area in rptAreaList">{{area}}</option>
+        </select>
+
+        <br><br>
+        
+        <button type="submit">Generate Report</button>
+
+        <hr>
+
+        <h1>{{rptTitle ? rptTitle : "Mock Harvest Report"}}</h1>  
+        <p>Details</p>
+        <ul>
+           <li> <strong>Farm:</strong>Sample Farm </li>
+          <li> <strong>User:</strong>manager1 </li>
+           <li> <strong>Language:</strong>English </li>
+        </ul>
+
+        <ul>
+            <li> <strong>Start:</strong>{{rptStart}} </li>
+            <li> <strong>End:</strong>{{rptEnd}} </li>
+            <li> <strong>Crop:</strong>{{rptCrop}} </li>
+        </ul>
+
+        <table border="1">
+            <tr>
+                <th>Date</th>
+                <th>Area</th>
+                <th>Crop</th>
+                <th>Yield</th>
+                <th>Units</th>
+            </tr>
+            <tr v-for="log in rptHarvestLogs" :key="log.date + log.area">
+                <td>{{log.date}}</td>
+                <td>{{log.area}}</td>
+                <td>{{log.crop}}</td>
+                <td>{{log.yield}}</td>
+                <td>{{log.units}}</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        var harvestReport = new Vue({
+            el:"#harvest-report",
+            data:{
+                rptTitle:"My Sample Harvest Report",
+                rptStart:"2020-05-05",
+                rptEnd:"2020-05-15",
+                rptCrop:"kale",
+                rptCropList: [ "Broccoli", "kale", "Peas"],
+                rptAreaList: [ "all", "Chuau-1", "SQ7"],
+                rptHarvestLogs: [
+                    { date: "2018-05-02", area: "Chuau-1", crop: "Kale", yield: 10, units: "Bunches" },
+                    { date: "2018-05-05", area: "SQ7", crop: "Kale", yield: 7, units: "Bunches" }
+                ],
+            },
+        });
+        Vue.config.devtools = true;
+    </script>
+
+</html>
