@@ -59,11 +59,30 @@ function fd2_school_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -100,
   );
+    // Add a new sub-tab named HTML.
+    $items['farm/fd2-school/html'] = array(
+        'title' => 'HTML',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('HTML'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 120,
+    );
+    // Add a new sub-tab named Vue1.
+    $items['farm/fd2-school/vue1'] = array(
+      'title' => 'Vue1',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'fd2_school_view',
+      'page arguments' => array('vue1'),
+      'access arguments' => array('view fd2 school'),
+      'weight' => 125,  // Weight controls the order of tabs; Vue1 will appear after HTML.
+    );
+
 
   // Add items blocks for new sub-tabs here.
 
   return $items;
-};
+}
 
 // This function Loads the content for the sub-tab from the html file specified in the arguemnt.
 // It must be renamed in each module.
