@@ -70,7 +70,7 @@ Each FarmData2 School Activity will ask you to add a new sub-tab to the FarmData
 
 7. Change into the directory for your sub-tab.
 
-8. Create an `.html` file inside the sub-tab directory. The name of the `.html` file must match the name of the direcotry. For example, if the directory name is `xyz` then the filename must be `xyz.html`.
+8. Create an `.html` file inside the sub-tab directory. The name of the `.html` file must match the name of the directory. For example, if the directory name is `xyz` then the filename must be `xyz.html`.
 
 9. Insert some _dummy code_ into the `.html` file for now just to get the sub-tab up and visible. For example:
    ```html
