@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<div id ="First-vue" v-cloak>
+    <input type="text" v-model="header">
+    <h2> {{ header ? header : "Mock Harvest Report"}} </h2>
+    <ul>
+        <li v-for="name in names">{{ name }}</li>
+    </ul>
+
+    <label for="start-date"> Start Date:</label>
+    <input type ="date" id="start-date" min ="2014-01-01" :max ="endDate" v-model="startDate" />
+    <br>
+
+    <label for="end-date">End Date:</label>
+    <input type ="date" id="end-date" :min ="startDate" max ="2020-01-01" v-model="endDate" />
+`   <br>
+
+    <label for = "Crops"> Crops: </label>
+    <select id="Crops" v-model="selectedCrop" >
+        <optgroup label="Crops">
+            <option v-for="crop in crops"> {{ crop }} </option>
+        </optgroup>
+      </select>
+
+      <br>
+      <label for = "Areas "> Areas:</label>
+      <select id="Areas" v-model="selectedArea" >
+        <optgroup label="Areas">
+            <option v-for="area in areas"> {{ area }} </option>
+        </optgroup>
+      </select>
+
+      <br>
+
+      
+      <button @click="generateReport">Generate Report </button>
+    <br>
+      <div v-if="harvestLogs.length > 0">
+    <table border = "1">
+        <tr>
+            <th> Row </th>
+            <th> Date </th>
+            <th> Area </th>
+            <th> Crop </th>
+            <th> Yield </th>
+            <th> Units </th>
+        </tr>
+        <tr v-for = "(log, index) in harvestLogs":key = "index">
+            <td> {{index + 1}}</td>
+            <td> {{log.date}} </td>
+            <td> {{log.area}} </td>
+            <td> {{log.crop}} </td>
+            <td> {{log.yield}} </td>
+            <td> {{log.units}} </td>
+        </tr>
+
+    </table>
+</div>
+<p v-else> No Matching Records</p>
+</div>
+
+<script>
+var firstVue = new Vue({
+el: "#First-vue",
+data: {
+    header: "My Sample Harvest Report",
+    startDate: " ",
+    endDate: " ",
+    selectedCrop: "",
+    selectedArea: "",
+    names: [
+        "Joe",
+        "Arun",
+        "Ouwen",
+        "Anh",
+        "Sue",
+    ],
+    crops: ["Broccoli", "Kale", "Peas"],
+    areas: ["North Field", "South Field", "Greenhouse"],
+    harvestLogs: [
+    ],
+},
+    methods: {
+    generateReport: function() {
+        this.harvestLogs.push({
+            date: '2018-05-01',
+            area: 'Orion-3',
+            crop: 'kale',
+            yield: '100',
+            units: 'kg'
+        });
+    } 
+}
+});
+Vue.config.devtools = true;
+</script>
