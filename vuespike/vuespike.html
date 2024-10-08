@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang = "en">
+  <head> 
+    <style>
+    [v-cloak] {
+        display:none
+    }
+  </style>
+    <meta charset = "UTF-8">
+    <title>Vue Data Binding Spike</title>
+  </head>
+  <body>
+    <div id="shopping-list" v-cloak>
+      <div class = "header">
+        <h1> {{ header.toLocaleUpperCase() }}</h1>
+       <button v-if="state=== 'default'" class ="button-btn.btn-primary" @click="changeState('edit')"> Show Cards</button>
+       <button v-else class= "button-btn.btn-cancel" @click = "changeState('default')"> Hide Cards </button>
+      </div>
+      <div v-if="state === 'edit'" class="add-item-from"> 
+        <li v-for="c in cards"> {{ c.suit }} of {{ c.rank}}</li>
+        <input type="text" v-model="header">
+      </div>
+        <br>
+        <label for = "newName"> Name:</label>
+        <input type = "text" id = "newName" v-model="newName" @keyup.enter="addName">
+        <button class = "btn btn-primary" v-bind:disabled= "newName.length === 0" @click = "addName" >Add Name</button>
+        <ul>
+          <li v-for="(name,index) in names">{{ name + " (" + index + ")"}}  </li>
+        </ul>
+        <p v-if="names.length === 0" > No Names Yet!</p>
+    </div>
+    <script src = "https://unpkg.com/vue@2"> </script>
+        <h1> Hi Vue! </h1>
+        <script>
+            var shoppingList = new Vue({
+                el: "#shopping-list",
+                data: {
+                    state: 'default',
+                    header: "Vue is ready to party!",
+                    newName: "",
+                    names: [],
+                    cards: [
+                      {suit: "H", rank: "3"},
+                      {suit: "S", rank: "K"},
+                      {suit: "D", rank: "7"}
+                      
+                    ]
+              
+                },
+                methods: {
+                  addName: function() {
+                    if(this.newName != '') {
+                    this.names.push(this.newName);
+                    this.newName = '';
+                    }
+        },
+        changeState: function(newState) {
+          this.state = newState;
+          this.item = '';
+        }
+      }
+        });
+        </script>
+  </body>
+</html>
+
