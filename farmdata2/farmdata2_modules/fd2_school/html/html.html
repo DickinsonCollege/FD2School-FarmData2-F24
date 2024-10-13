@@ -1,0 +1,109 @@
+
+
+<h1>Harvest Report</h1>
+<p>This page is a <i>mockup</i> of a simplified harvest report</p>
+<label for="comment">Title:</label>
+<input type="text" id="comment" name="comment" value="My Sample Harvest Report" />
+
+<form>
+    <label>
+       Start:
+      <input
+        type="date"
+        name="party"
+        min="2014-01-01"
+        max="2022-01-01"
+        value="2020-05-05"
+        required />
+    </label>
+    <label>
+        End:
+        <input
+          type="date"
+          name="party"
+          min="2020-05-05"
+          max="2022-01-01"
+          value="2020-05-15"
+          required />
+      </label>
+</form>
+
+<label for = "crop">Crop:</label>
+<select id="crop" name="crop">
+    <option>Broccoli</option>
+    <option selected>Kale</option>
+    <option>Peas</option>
+</select>
+
+<label for = "field">Area:</label>
+<select id="field" name="field">
+    <option selected>All</option>
+    <option>Chuau-1</option>
+    <option>SQ7</option>
+</select>
+
+<br>
+<button type="button">Generate Report</button>
+<hr>
+
+<h2>My Sample Harvest Report</h2>
+<br>
+<p>Details:</p>
+<ul>
+    <li><b>Farm:</b>Sample Farm</li>
+    <li><b>User:</b>manager1</li>
+    <li><b>Language:</b>English</li>
+</ul>
+<ul>
+    <li><b>Start:</b>05/01/2018</li>
+    <li><b>End:</b>05/15/2018</li>
+    <li><b>Crop:</b>Kale</li>
+</ul>
+
+<style>
+    table {
+      width: 20%;
+    }
+    
+    th, td {
+      text-align: center;
+      padding: 5px;
+    }
+    
+    tr:nth-child(odd) {
+      background-color: #e8f3c1;
+    }
+</style>
+
+<table border=1>
+  <tr>
+    <th>Date</th>
+    <th>Area</th>
+    <th>Crop</th>
+    <th>Yield</th>
+    <th>Units</th>
+  </tr>
+  <tr>
+    <td>09/17/2022</td>
+    <td>All</td>
+    <td>Kale</td>
+    <td>9999999</td>
+    <td>Tons</td>
+  </tr>
+  <tr>
+    <td>09/18/2020</td>
+    <td>SQ7</td>
+    <td>Peas</td>
+    <td>1</td>
+    <td>Pea</td>
+  </tr>
+  <tr>
+    <td>09/19/2021</td>
+    <td>SQ7</td>
+    <td>Broccoli</td>
+    <td>10</td>
+    <td>Trees</td>
+  </tr>
+</table>
+
+  
