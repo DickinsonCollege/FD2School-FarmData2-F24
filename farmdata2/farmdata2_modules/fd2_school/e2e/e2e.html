@@ -4,7 +4,10 @@
     <input type="text" v-model="header">
     <h1 v-if="harvestReportRows.length > 0" data-cy="report-header">{{ header ? header : "Mock Harvest Report"}} </h1>
     <ul>
-        <li v-for="name in names">{{ name }}</li>
+        <li data-cy="farm-name"><strong>Farm:</strong> {{ farm }}</li>
+        <li data-cy="farm-user"><strong>User:</strong> {{ user }}</li>
+        <li <span data-cy="language">{{ language }}</span> </li> 
+        <li v-for="name in names">{{ name }} </li>
     </ul>
 
     <label for="start-date">Start Date:</label>
@@ -82,7 +85,7 @@ data: {
     selectedArea: "",
     farm: " ",
     user: " ",
-    language: " ",
+    language: "",
     names: [
         "Joe",
         "Arun",
