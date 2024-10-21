@@ -2,7 +2,7 @@
 <h1 data-cy="page-header">Harvest Report</h1>
 <div id ="First-vue" v-cloak>
     <input type="text" v-model="header">
-    <h2> {{ header ? header : "Mock Harvest Report"}} </h2>
+    <h1 v-if="harvestReportRows.length > 0" data-cy="report-header">{{ header ? header : "Mock Harvest Report"}} </h1>
     <ul>
         <li v-for="name in names">{{ name }}</li>
     </ul>
@@ -33,7 +33,7 @@
       <br>
 
       
-      <button @click="generateReport">Generate Report </button>
+      <button data-cy="generate-report-button" @click="generateReport">Generate Report </button>
     <br>
       <div v-if="harvestReportRows.length > 0">
     <table border = "1">
