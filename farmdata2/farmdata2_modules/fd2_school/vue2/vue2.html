@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harvest Report</title>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <input type="text" v-model="reportTitle">
+    <h1>Harvest Report</h1>
+    <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
+    <hr>
+    <h1>{{ reportTitle.trim() === '' ? 'Mock Harvest Report' : reportTitle }}</h1>
+    <p>Details:</p>
+    <ul>
+        <li><strong>Farm:</strong> Sample Farm</li>
+        <li><strong>User:</strong> manager1</li>
+        <li><strong>Language:</strong> English</li>
+        <li><strong>Start:</strong>{{ startDate }}</li>
+        <li><strong>End:</strong> {{ endDate }}</li>
+        <li><strong>Crop:</strong>{{ selectedCrop }}</li>
+    </ul>
+    <label for="reportTitle">Title:</label>
+    <input type="text" id="reportTitle" v-model="reportTitle" placeholder="Enter the title of the harvest report">
+    <br><br>
+    <label for="cropSelect">Crop:</label>
+    <select id="cropSelect" v-model="selectedCrop">
+        <option v-for="crop in crops" :value="crop">{{ crop }}</option>
+    </select>
+    <br><br>
+    <label for="fieldSelect">Area:</label>
+    <select id="fieldSelect" v-model="selectedArea">
+        <option v-for="area in areas" :value="area">{{ area }}</option>
+    </select>
+    
+    <br><br>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" name="startDate" 
+           v-model="startDate"
+           :max="endDate"
+           :min="'2014-01-01'" 
+           :max="'2022-01-01'">
+    <br><br>
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" name="endDate" 
+           v-model="endDate"
+           :min="startDate"
+           :min="'2014-01-01'" 
+           :max="'2022-01-01'">
+    <br><br>
+    <button type="submit" @click="generateReport">Generate Report</button>
+
+    <!-- Table with conditional rendering -->
+    <div v-if="logs.length === 0">
+        No matching records found.
+    </div>
+    <table v-else border="1">
+        <tr>
+            <th>Row</th>
+            <th>Date</th>
+            <th>Area</th>
+            <th>Crop</th>
+            <th>Yield</th>
+            <th>Units</th>
+        </tr>
+        <tr v-for="(log, index) in logs">
+            <td>{{ index + 1 }}</td>
+            <td>{{ log.date }}</td>
+            <td>{{ log.area }}</td>
+            <td>{{ log.crop }}</td>
+            <td>{{ log.yield }}</td>
+            <td>{{ log.units }}</td>
+        </tr>
+    </table>
+  </div>
+  <script>
+  var app = new Vue({
+     el: "#app",
+     data: {
+        reportTitle: "My Sample Harvest Report",
+        startDate: "2020-05-05",
+        endDate: "2020-05-15",
+        selectedCrop: "kale",
+        selectedArea: "all",
+        crops: ["broccoli", "kale", "peas"],
+        areas: ["all", "chuau-1", "sq7"],
+        logs: []
+     },
+     methods: {
+        generateReport: function() {
+            this.logs.push({
+                date: "2018-05-01", 
+                area: "Chuau-1", 
+                crop: "Kale", 
+                yield: 10, 
+                units: "Bunches"
+            });
+        }
+     },
+     watch: {
+        startDate: function(newDate) {
+            if (newDate > this.endDate) {
+                this.endDate = newDate;
+            }
+        },
+        endDate: function(newDate){
+            if (newDate < this.startDate) {
+                this.startDate = newDate;
+            }
+        }
+     }
+  });
+  window.app = app;
+  Vue.config.devtools = true;
+  </script>
+</body>
+</html>
