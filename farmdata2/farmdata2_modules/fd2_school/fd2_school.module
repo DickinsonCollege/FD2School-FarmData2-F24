@@ -52,6 +52,8 @@ function fd2_school_menu() {
     'weight' => -30,                                  // larger weights appear further right.
   );
 
+
+
   // Define the name and URL for the default sub-tab that appears when the tab is opened.
   // Content for this default sub-tab is provided by the 'page arguments' above.
   $items['farm/fd2-school/info'] = array(
@@ -59,8 +61,65 @@ function fd2_school_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -100,
   );
+  
+  // Define another tab for the module
+    $items['farm/fd2-school/html'] = array(
+        'title' => 'HTML',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('html'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 110,
+    );
 
-  // Add items blocks for new sub-tabs here.
+    $items['farm/fd2-school/vue1'] = array(
+        'title' => 'Vue 1',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('vue1'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 115,
+    );
+
+      $items['farm/fd2-school/vue2'] = array(
+        'title' => 'Vue 2',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('vue2'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 120,
+    );
+
+    $items['farm/fd2-school/api'] = array(
+        'title' => 'API',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('api'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 125,
+    );
+
+       
+    $items['farm/fd2-school/api2'] = array(
+        'title' => 'API2',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('api2'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 130, 
+    );
+
+     $items['farm/fd2-school/e2e'] = array(
+        'title' => 'E2E',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('e2e'),
+        'access arguments' => array('view fd2 school'),
+        'weight' => 135, 
+    );
+
+
+    
 
   return $items;
 };
