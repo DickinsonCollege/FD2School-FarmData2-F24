@@ -100,7 +100,7 @@
                 harvestReportRows() {
                     let tableRows = []
                     for(let log of this.harvestPages) {
-                        if (this.idToCropMap.get(log.data.crop_tid) == this.rptCrop) {
+                        if (this.idToCropMap.get(log.data.crop_tid) === this.rptCrop) {
                             let tableRow = {
                                 date: dayjs.unix(log.timestamp).format('MM-DD-YYYY'),
                                 area: log.area[0].name,
