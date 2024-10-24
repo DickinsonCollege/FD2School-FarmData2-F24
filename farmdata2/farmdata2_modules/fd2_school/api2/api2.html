@@ -53,7 +53,7 @@
         </ul>
 
         <table border=1>
-            <tr v-if="harvestLogs.length > 0">
+            <tr v-if="harvestReportRows.length > 0">
                 <th>Row</th>
                 <th>Date</th>
                 <th>Area</th>
@@ -61,7 +61,7 @@
                 <th>Yield</th>
                 <th>Units</th>
             </tr>
-            <tr v-for="(log, index) in harvestLogs">
+            <tr v-for="(log, index) in harvestReportRows">
                 <td>{{ index+1 }}</td>
                 <td>{{ log.date }}</td>
                 <td>{{ log.area }}</td>
@@ -96,6 +96,22 @@
                 },
                 areaNames() {
                     return Array.from(this.idToAreaMap.values())
+                },
+                harvestReportRows() {
+                    let tableRows = []
+                    for(let log of this.harvestPages) {
+                        if (this.idToCropMap.get(log.data.crop_tid) == this.rptCrop) {
+                            let tableRow = {
+                                date: dayjs.unix(log.timestamp).format('MM-DD-YYYY'),
+                                area: log.area[0].name,
+                                yield: log.quantity[0].value,
+                                units: log.quantity[0].unit.name,
+                                crop: this.idToCropMap.get(log.data.crop_tid),
+                            }
+                            tableRows.push(tableRow)
+                        }
+                    }
+                    return tableRows
                 }
             },
             methods: {
@@ -108,14 +124,10 @@
                     .catch((error) => {
                         console.log("Error Occurred")
                     })
-                    this.harvestLogs.push({date:'2018-05-01', area:'SQ7',
-         crop:'kale', yield: 20, units:'Bunches'});
+                    
                     let start = dayjs(this.rptStartDate).unix();
                     let end = dayjs(this.rptEndDate).unix();
                     let endpoint = "/log.json?type=farm_harvest&timestamp[ge]=" + start + "&timestamp[le]=" + end;
-                    console.log(start);
-                    console.log(end);
-                    console.log(endpoint);
                     getAllPages(endpoint, this.harvestPages)
                     .then(() => {
                         
