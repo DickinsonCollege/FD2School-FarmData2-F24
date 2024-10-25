@@ -36,7 +36,7 @@
 
         <hr />
     
-        <h1>{{ rptTitle }}</h1>
+        <h1 data-cy="page-header">{{ rptTitle }}</h1>
         
         <br />
         <p>Details:</p>
@@ -76,7 +76,7 @@
         var harvestReport = new Vue({
             el: '#harvest-report',
             data: {
-                rptTitle: 'My Sample Harvest Report',
+                rptTitle: 'Harvest Report',
                 rptStartDate: "05-05-2020",
                 rptEndDate: "05-15-2020",
                 rptCrop: "Kale",
