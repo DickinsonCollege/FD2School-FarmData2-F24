@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en-US">
+  <h1>Harvest Report </h1>
+    <p> This page is a <i>mockup</i> of a simplified harvest report. </p>
+    <label for="textField">Title: </label>
+
+    <div id="my-sample" v-cloak>
+      <div>
+        <input type="text" v-model="header"/>
+  
+      </div>
+    <br>
+
+    <div > 
+      <label for="startDate">Start: </label>
+      <input type="date" id="startDate" min="2014-01-01" max="2022-01-01" v-model="start">
+      <label for="endDate">End: </label>
+      <input type="date" id="endDate" :min="start" max="2022-01-01" v-model="end">
+      <br> 
+
+
+      <label for="cropDropdown">Crop: </label>
+    <select id="cropDropDown" name="Crop" v-model="crop">
+      <option v-for = "item in crops">{{item}}</option>
+    </select>
+
+
+    <label for="fieldDropDown">Area: </label>
+    <select id="fieldDropDown" name="Field" v-model="field">
+      <option v-for="area in areas">{{area}}</option>
+    </select>
+    </div> 
+    
+    
+    <br>
+    <div class="generate-report">
+      <button class="btn btn-primary" @click="generate">Generate Report</button>
+    </div>
+
+    <hr />
+
+    <div>
+      <h1>{{ header ? header : "Mock Harvest Report" }}</h1>
+    </div>
+  
+    
+
+    
+    <p> Details </p>
+    <ul>
+      <li><strong>Farm:</strong>Sample Farm</li>
+      <li><strong>User:</strong>manager1</li>
+      <li><strong>Language:</strong>English</li>
+      <br>
+      <li><strong>Start:</strong>{{start}}</li>
+      <li><strong>End:</strong>{{end}}</li>
+      <li><strong>Crop:</strong>{{crop}}</li>
+    </ul>
+    
+    <table border=1>
+      <tr v-if="logs.length > 0">
+        <th>Row</th>
+        <th>Date</th>
+        <th>Area</th>
+        <th>Crop</th>
+        <th>Yield</th>
+        <th>Units</th>
+      </tr>
+      
+      <tr v-for="(log,index) in logs">
+        <td>{{index + 1}}</td>
+        <td>{{log.date}}</td>
+        <td >{{log.area}}</td>
+        <td >{{log.cr}}</td>
+        <td>{{log.yield}}</td>
+        <td>{{log.units}}</td>
+      </tr>
+    </table>
+    <p v-if = "logs.length === 0">No report to display</p>
+    
+</div>
+
+
+<script>
+  var mySample = new Vue({
+    el: "#my-sample",
+    data: {
+      header: "My Sample Harvest Report",
+      start: "2020-05-05",
+      end: "2021-02-02",
+      crop:'Kale',
+      crops:[
+        "Kale",
+        "Broccoli",
+        "Peas"
+      ],
+      field : "All",
+      areas : [
+        "All",
+        "Chuau-1",
+        "SQ7",
+      ],
+      logs:[],
+    },
+    methods:{
+      generate: function(){
+        this.logs.push({date: "2018-05-01", area: "Orion-3", 
+      cr: "Kale", yield: "12", units: "Bunches"});
+      },
+    }
+  });
+
+  Vue.config.devtools = true;
+</script>
+</html>
