@@ -1,5 +1,5 @@
 <html>
-    <h1>Harvest Report</h1>
+    <h1 data-cy = "page-header">Harvest Report</h1>
     <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
     <div id="harvest-report" v-cloak>
         <label for="title">Title:</label>
@@ -7,13 +7,13 @@
         <br><br>
         
         <label for="start">Start:</label>
-        <input type="date" id="start" :min="2014-01-01" :max="rptEnd" v-model="rptStart">
+        <input type="date" id="start" data-cy="start-date" :min="2014-01-01" :max="rptEnd" v-model="rptStart">
         <label for="end">End:</label>
-        <input type="date" id="end" :min="rptStart" :max="2022-01-01" v-model="rptEnd">
+        <input type="date" id="end" data-cy="end-date" :min="rptStart" :max="2022-01-01" v-model="rptEnd">
         <br><br>
         
         <label for="crop">Crop:</label>
-        <select id="crop" name="crop" v-model="rptCrop">
+        <select id="crop" name="crop" v-model="rptCrop" data-cy="crop_dropdown">
             <option v-for="crop in cropNames">{{crop}}</option>
         </select>
         <label for="area">Area:</label>
@@ -21,16 +21,18 @@
             <option v-for="area in areaNames">{{area}}</option>
         </select>
         <br><br>
-        
-        <button type="submit" @click="generateReport">Generate Report</button>
+
+        <button type="submit" @click="generateReport" data-cy="generate-report-button">Generate Report</button>
         <hr>
-        <h1>{{rptTitle ? rptTitle : "Mock Harvest Report"}}</h1>  
+        <h1 data-cy="report-header">{{rptTitle ? rptTitle : "Mock Harvest Report"}}</h1>
         <p>Details</p>
+        
         <ul>
-           <li><strong>Farm:</strong> {{farm || "Sample Farm"}} </li>
-           <li><strong>User:</strong> {{user || "manager1"}} </li>
-           <li><strong>Language:</strong> {{language || "English"}} </li>
-        </ul>
+            <li data-cy="farm-name"><strong>Farm:</strong> {{ farm || "Sample Farm" }} </li>
+            <li data-cy="user-name"><strong>User:</strong> {{ user || "manager1" }} </li>
+            <li><strong>Language:</strong> <span data-cy="language">{{ language || "English" }}</span></li>
+         </ul>
+
         <ul>
             <li><strong>Start:</strong>{{rptStart}} </li>
             <li><strong>End:</strong>{{rptEnd}} </li>
