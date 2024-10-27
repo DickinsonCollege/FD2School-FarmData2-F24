@@ -116,7 +116,15 @@ function fd2_school_menu() {
       'weight' => 145,  // Weight controls the order of tabs; Vue2 will appear after HTML.
     );
     
-
+    // Add a new sub-tab named FD2.
+    $items['farm/fd2-school/fd2'] = array(
+      'title' => 'fd2',
+      'type' => MENU_LOCAL_TASK,
+      'page callback' => 'fd2_school_view',
+      'page arguments' => array('api'),
+      'access arguments' => array('view fd2 school'),
+      'weight' => 150,  // Weight controls the order of tabs; Vue2 will appear after HTML.
+    );
 
 
   // Add items blocks for new sub-tabs here.
