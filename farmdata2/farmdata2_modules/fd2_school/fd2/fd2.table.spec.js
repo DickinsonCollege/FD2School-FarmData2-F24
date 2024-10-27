@@ -2,9 +2,9 @@ describe("Test the CustomTableComponent", () => {
   beforeEach(() => {
     cy.login("manager1", "farmdata2")
     cy.visit("/farm/fd2-school/fd2")
-    cy.get("[data-cy=generate-report-btn]").click()
   })
   it("Check if the table has the right columns", () => {
+    cy.get("[data-cy=generate-report-btn]").click()
     cy.get("[data-cy=h0]").should("have.text","Row")
     cy.get("[data-cy=h1]").should("have.text","Date")
     cy.get("[data-cy=h2]").should("have.text","Area")
@@ -14,5 +14,8 @@ describe("Test the CustomTableComponent", () => {
 
     cy.get("[data-cy=table-headers]").children()
       .should("have.length","6")
+  })
+  it("Check if filtering by crop works correctly", () => {
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option0]")
   })
 })

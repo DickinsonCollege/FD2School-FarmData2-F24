@@ -15,9 +15,12 @@ describe("Test the harvest report default values", () => {
       .should("have.value","2020-05-15")
   })
   it("Check the crop dropdown list", () => {
-    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option0]")
-    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option4]")
-    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option110]")
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option1]")
+      .should("have.text","ARUGULA")
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option5]")
+      .should("have.text","BEAN-FAVA")
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option111]")
+      .should("have.text","ZUCCHINI")
     cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input]").children()
       .should("have.length","112")
 
