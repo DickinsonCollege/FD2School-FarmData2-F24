@@ -1,0 +1,29 @@
+describe("Test the CustomTableComponent", () => {
+  beforeEach(() => {
+    cy.login("manager1", "farmdata2")
+    cy.visit("/farm/fd2-school/fd2")
+  })
+  it("Check if the table has the right columns", () => {
+    cy.get("[data-cy=generate-report-btn]").click()
+    cy.get("[data-cy=h0]").should("have.text","Row")
+    cy.get("[data-cy=h1]").should("have.text","Date")
+    cy.get("[data-cy=h2]").should("have.text","Area")
+    cy.get("[data-cy=h3]").should("have.text","Crop")
+    cy.get("[data-cy=h4]").should("have.text","Yield")
+    cy.get("[data-cy=h5]").should("have.text","Units")
+
+    cy.get("[data-cy=table-headers]").children()
+      .should("have.length","6")
+  })
+  it("Check if filtering by crop works correctly", () => {
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input]")
+      .select("ARUGULA")
+    cy.get("[data-cy=generate-report-btn]").click()
+    cy.get("[data-cy=table-body]").children()
+      .should("have.length","4")
+    for(let i = 0; i < 4; i ++){
+      cy.get("[data-cy=td-r"+ i +"c2]")
+        .should("contain.text","ARUGULA")
+    }
+  })
+})
