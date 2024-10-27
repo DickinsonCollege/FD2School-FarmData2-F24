@@ -16,6 +16,14 @@ describe("Test the CustomTableComponent", () => {
       .should("have.length","6")
   })
   it("Check if filtering by crop works correctly", () => {
-    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option0]")
+    cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input]")
+      .select("ARUGULA")
+    cy.get("[data-cy=generate-report-btn]").click()
+    cy.get("[data-cy=table-body]").children()
+      .should("have.length","4")
+    for(let i = 0; i < 4; i ++){
+      cy.get("[data-cy=td-r"+ i +"c2]")
+        .should("contain.text","ARUGULA")
+    }
   })
 })
