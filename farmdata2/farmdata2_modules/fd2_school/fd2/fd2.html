@@ -19,11 +19,12 @@
 `   <br>
 
     <label for = "Crops"> Crops: </label>
-    <select id="Crops" v-model="selectedCrop" >
-        <optgroup data-cy = "crop-dropdown" label="Crops">
-            <option v-for="crop in cropNames" :key = "crop"> {{ crop }} </option>
-        </optgroup>
-      </select>
+    <dropdown-with-all data-cy = crop-dropdown
+    :includes-all="true"
+    selected-val="All"
+    @selection-changed = "cropChange"
+    :dropdown-list = "cropNames">
+    </dropdown-with-all>
 
       <br>
       <label for = "Areas "> Areas:</label>
@@ -77,11 +78,15 @@ var firstVue = new Vue({
         });
     },
 el: "#First-vue",
+components: {
+        // Register the components used and define the tag name to be used.
+        'dropdown-with-all': DropdownWithAllComponent,
+    },
 data: {
     header: "My Sample Harvest Report",
     startDate: "2020-05-05",
     endDate: "2020-05-15",
-    selectedCrop: "",
+    selectedCrop: "All",
     selectedArea: "",
     farm: " ",
     user: " ",
@@ -108,17 +113,16 @@ data: {
         harvestReportRows() {
             let tableRows = []
             for (let log of this.harvestLogsArray) {
-
-                if (this.selectedCrop && cropName !== this.selectedCrop) {
+                let cropName = this.idToCropMap.get(log.data.crop_tid) || "Unknown Crop";
+                if (this.selectedCrop !== 'All' && cropName !== this.selectedCrop) {
             continue; 
         }
+        
         let area = log.area ? log.area[0].name : "Unknown Area"; 
         let harvestQuantity = log.quantity.find(q => q.label === "harvest");
         let yieldAmount = harvestQuantity ? harvestQuantity.value : "N/A";
         let units = harvestQuantity ? harvestQuantity.units : "N/A";
         let formattedDate = dayjs.unix(log.timestamp).format('YYYY-MM-DD');
-        
-        let cropName = this.idToCropMap.get(log.data.crop_tid) || "Unknown Crop";
                 let tableRow = {
                     date: formattedDate,
                     area: area,     
@@ -132,6 +136,9 @@ data: {
         }
     },
     methods: {
+        cropChange(newCrop) {
+            this.selectedCrop = newCrop
+        },
     generateReport: function() {
         let startDateUnix = dayjs(this.startDate).unix();
         let endDateUnix = dayjs(this.endDate).unix();
