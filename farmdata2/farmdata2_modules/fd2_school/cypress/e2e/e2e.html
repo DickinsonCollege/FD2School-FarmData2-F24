@@ -8,7 +8,10 @@
         <label for="title">Title:</label>
         <input type="text" v-model="reportTitle" placeholder="Enter report title">
       </div>
-      <h1>{{ reportTitle.trim() === '' ? 'Mock Harvest Report' : reportTitle }}</h1>
+
+      
+      <h1>{data-cy="report-header">{ reportTitle ? reportTitle : 'My Sample Harvest Report' }}</h1>
+
       <div>
         <h3>Report Details</h3>
         <p>Farm: {{ farm }}</p>
@@ -103,7 +106,7 @@
         <button @click="addName" :disabled="!newField.trim()">Add Name</button>
       </div>
       <div>
-        <button @click="generateReport">Generate Report</button>
+        <button @click="generateReport" data-cy="generate-report-button">Generate Report</button>
       </div>
     </div>
     
