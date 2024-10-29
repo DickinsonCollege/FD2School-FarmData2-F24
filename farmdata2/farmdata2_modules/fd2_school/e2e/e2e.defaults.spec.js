@@ -17,4 +17,15 @@ describe("Test the harvest report default values", () => {
             .should("have.value","2020-05-15")
 
     })
+
+    it("Check the crop selector", () => {
+        cy.get("[data-cy=crop-selector]").children().eq(0)
+            .should("have.text","ARUGULA")
+        cy.get("[data-cy=crop-selector]").children().eq(4)
+            .should("have.text","BEAN-FAVA")
+        cy.get("[data-cy=crop-selector]").children().eq(110)
+            .should("have.text","ZUCCHINI")
+        cy.get("[data-cy=crop-selector]").children()
+            .should("have.length", 111)
+    })
 }) 

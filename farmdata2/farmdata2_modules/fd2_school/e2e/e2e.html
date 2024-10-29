@@ -23,7 +23,7 @@
         <br />
         <br />
         <label for="crop">Crop:</label>
-        <select id="crop" name="crop" v-model="rptCrop">
+        <select id="crop" name="crop" v-model="rptCrop" data-cy="crop-selector" >
             <option v-for="crop in cropNames">{{ crop }}</option>
         </select>
         <label for="area">Area:</label>
