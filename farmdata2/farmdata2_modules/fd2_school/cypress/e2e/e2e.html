@@ -31,7 +31,7 @@
       <!-- Updated Crop selection input using computed property -->
       <div>
         <label for="crop">Crop:</label>
-        <select v-model="reportCrop">
+        <select v-model="reportCrop" data-cy="crop-dropdown">
           <option v-for="crop in cropNames" :key="crop">{{ crop }}</option>
         </select>
       </div>

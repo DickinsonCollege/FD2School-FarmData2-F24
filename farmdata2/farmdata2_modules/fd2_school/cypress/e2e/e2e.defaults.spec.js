@@ -19,4 +19,22 @@ describe("Test the harvest report default values", () => {
         .should("have.value", "2020-05-15")
         // Empty test, ready to be filled in later with assertions for default values
     });
+    it('should find the crop dropdown element', () => {
+        cy.visit('/farm/fd2-school/e2e');
+        cy.get('[data-cy="crop-dropdown"]').should('exist'); // Check that the dropdown exists
+      });
+    
+      it('should contain crop options within the dropdown', () => {
+        cy.get('[data-cy="crop-dropdown')
+        .children('option')
+        .should('have.length',111);
+
+        cy.get('[data-cy="crop-dropdown"]').children().eq(0)
+            .should('have.text', 'ARUGULA'); // First crop
+        cy.get('[data-cy="crop-dropdown"]').children().eq(4)
+            .should('have.text', 'BEAN-FAVA'); // Fifth crop
+        cy.get('[data-cy="crop-dropdown"]').children().last()
+            .should('have.text', 'ZUCCHINI');
+      });
+
 });
