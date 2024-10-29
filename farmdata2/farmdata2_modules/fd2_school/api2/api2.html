@@ -30,14 +30,12 @@
         <label for="end-date">End Date:</label>
         <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate">
 
-        
-
-
 
         <h3>Selected Crop: {{ selectedCrop }}</h3>
 
         <label for="crop">Select Crop:</label>
         <select id="crop" v-model="selectedCrop">
+            <option value="">All</option>
             <option v-for="crop in cropNames" :key="crop" :value="crop">{{ crop }}</option>
         </select>
         
@@ -45,22 +43,12 @@
 
         <label for="area">Select Area</label>
         <select id="area" v-model="selectedArea">
-            <option v-for="area in areas" :key="area" :value="area">{{ area }}</option>
+            <option value="">All</option>
+            <option v-for="area in areaNames" :key="area" :value="area">{{ area }}</option>
         </select>
 
         <button @click='generateReport'>Generate Report</button>
 
-        <h3>Farm:{{ Farm }}</h3>
-        <label for="farm">Farm Name:</label>
-        <input type="text" id="farm" v-model="Farm">
-
-        <h3>User:{{ User }}</h3>
-        <label for="user">User Name:</label>
-        <input type="text" id="user" v-model="User">
-
-        <h3>Language:{{ Language }}</h3>
-        <label for="language">Language:</label>
-        <input type="text" id="language" v-model="Language">
 
         <h2>Harvest Logs</h2>
         <div v-if="harvestReportRows.length > 0">
@@ -109,39 +97,105 @@
                 startDate: "",
                 endDate: "",
                 selectedCrop:"",
-                selectedArea: " ",
-                areas: ["Field1","Field2","Orion-3"],
-                harvLogs: [],
-                Farm:" ",
-                User:" ",
-                Language:" ",
+                selectedArea: "",
+                idToAreaMap: new Map(),
                 idToCropMap: new Map(),
                 allHarvestLogs: []
+            },
+            created(){
+                getIDToCropMap()
+                    .then((theMap)=> {
+                        this.idToCropMap = theMap;
+                    })
+                    .catch((error)=>{
+                        console.log("Error getting crop ID to crop name map",error);
+                    });
+                getIDToAreaMap()
+                    .then((theMap) =>{
+                        this.idToAreaMap =theMap;
+                    })
+                    .catch((error)=>{
+                        console.log("Error getting Areas ",error)
+                    });
+                    
+                    
+              
             },
             computed:{
                 cropNames(){
                     return this.transformMapToArray(this.idToCropMap);
                 },
+                areaNames() {
+                    return this.transformMapToArray(this.idToAreaMap);
+                },
+
                 harvestReportRows() {
-	                let tableRows = []
+	                let tableRows = [];
+
 	                for(let log of this.allHarvestLogs) {
-                        if(log.crop == this.selectedCrop){
+                        let cropName = this.idToCropMap.get(log.data.crop_tid);
+                        let areaName = log.area[0].name;
+
+                        //for the double all scenario. Just show all harvest reports
+                        if(this.selectedCrop == "" && this.selectedArea==""){
                             let tableRow = {
-			                    date:dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
-                                crop:this.idToCropMap.get(log.data.crop_tid),
-                                area:log.area[0].name,
-                                yield:log.quantity[0].value, 
-                                units:log.quantity[0].unit.name
-		                    }
+			                    date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                                crop: cropName,
+                                area: areaName,
+                                yield: log.quantity[0].value, 
+                                units: log.quantity[0].unit.name
+		                    };
                      
-                        tableRows.push(tableRow)
-                            
+                            tableRows.push(tableRow);
                         }
+
+                        //When the user selects a crop and area. Filter results based on selections
+                        else if(cropName == this.selectedCrop && areaName == this.selectedArea){
+                            let tableRow = {
+			                    date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                                crop: cropName,
+                                area: areaName,
+                                yield: log.quantity[0].value, 
+                                units: log.quantity[0].unit.name
+		                    };
+                     
+                            tableRows.push(tableRow);
+                            
+                        }//When user chooses a certain crop and all areas
+                        else if(this.selectedArea && this.selectedCrop ==""){
+                            if(areaName == this.selectedArea){
+                                let tableRow = {
+			                        date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                                    crop: cropName,
+                                    area: areaName,
+                                    yield: log.quantity[0].value, 
+                                    units: log.quantity[0].unit.name
+		                        };
+                                tableRows.push(tableRow);
+                            }
+                            
+                     
+                            
+                         //When user chooses a certain area and all crops   
+                        }else if(this.selectedCrop && this.selectedArea == ""){
+                            if(cropName == this.selectedCrop){
+                                let tableRow = {
+			                        date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                                    crop: cropName,
+                                    area: areaName,
+                                    yield: log.quantity[0].value, 
+                                    units: log.quantity[0].unit.name
+		                        };
+                                tableRows.push(tableRow);
+                            }
+
+                        }
+                        
                         
 
 		                
 	                }
-	                return tableRows
+	                return tableRows;
                 }
             },
 
@@ -150,10 +204,9 @@
             methods: {
                 generateReport: function(){
 
-                    requestStr="/log.json?type=farm_harvest/log.json?type=farm_harvest&timestamp[ge]=1588651200&timestamp[le]=1589515200";
+                    this.allHarvestLogs = [];
 
-
-                    
+                    requestStr="/log.json?type=farm_harvest";
 
                     getAllPages(requestStr, this.allHarvestLogs)
                     .then(() =>{
@@ -163,49 +216,13 @@
                         console.error("Error grabbing the Harvest Logs",err);
 
                     })
- 
-
-                    axios.get('/farm.json')
-                    .then((response)=>{
-                        this.Farm = response.data.name;
-                        this.User = response.data.user.name;
-                        this.Language = response.data.language;
-
-                        this.harvLogs.push({
-                            date: this.startDate,
-                            area: this.selectedArea,
-                            crop: this.selectedCrop,
-                            yield: "12",
-                            units: "Bunches"
-                        });
-
-                    })
-                    .catch((error)=>{
-                        console.log(error);
-
-                    })
-                    //block c
-
-                   
                     
                     
                 },
                 transformMapToArray(map){
                     return [...map.values()];
                 }
-
-
-            },
-            created(){
-                getIDToCropMap()
-                    .then((theMap)=> {
-                        this.idToCropMap = theMap;
-                    })
-                    .catch((error)=>{
-                        console.log("Error getting crop ID to croup name map");
-                        console.log(error);
-                    });
-            },
+            }
             
         });
         Vue.config.devtools = true;
