@@ -16,10 +16,10 @@
         <br />
         <label for="startdate">Start:</label>
         <input name="harvest-start" id="start" type="date" 
-        min="01-01-2014" :max="rptEndDate" v-model="rptStartDate" />
+        min="01-01-2014" :max="rptEndDate" v-model="rptStartDate" data-cy="start-date" />
         <label for="enddate">End:</label>
         <input name="harvest-end" id="end" type="date" 
-        :min="rptStartDate" max="01-01-2022" v-model = "rptEndDate"/>
+        :min="rptStartDate" max="01-01-2022" v-model = "rptEndDate" data-cy="end-date" />
         <br />
         <br />
         <label for="crop">Crop:</label>
@@ -77,8 +77,8 @@
             el: '#harvest-report',
             data: {
                 rptTitle: 'Harvest Report',
-                rptStartDate: "05-05-2020",
-                rptEndDate: "05-15-2020",
+                rptStartDate: "2020-05-05",
+                rptEndDate: "2020-05-15",
                 rptCrop: "Kale",
                 rptArea: "All",
                 newHarvestLog: {},
