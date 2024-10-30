@@ -61,6 +61,53 @@ function fd2_school_menu() {
   );
 
   // Add items blocks for new sub-tabs here.
+  $items['farm/fd2-school/html'] = array(
+    'title' => 'HTML',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'fd2_school_view',
+    'page arguments' => array('html'),
+    'access arguments' => array('view fd2 school'),
+    'weight' => 100,
+  );
+
+  // Add the new Vue1 tab
+  $items['farm/fd2-school/vue1'] = array(
+    'title' => 'Vue1',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'fd2_school_view',
+    'page arguments' => array('vue1'),
+    'access arguments' => array('view fd2 school'),
+    'weight' => 110,
+  );
+  // Add the new Vue2 tab
+  $items['farm/fd2-school/vue2'] = array(
+  'title' => 'Vue2',
+  'type' => MENU_LOCAL_TASK,
+  'page callback' => 'fd2_school_view',
+  'page arguments' => array('vue2'),
+  'access arguments' => array('view fd2 school'),
+  'weight' => 120,
+);
+
+// Add the new API tab
+$items['farm/fd2-school/api'] = array(
+  'title' => 'API',
+  'type' => MENU_LOCAL_TASK,
+  'page callback' => 'fd2_school_view',
+  'page arguments' => array('api'),
+  'access arguments' => array('view fd2 school'),
+  'weight' => 130,
+);
+
+// Add the API2 tab
+$items['farm/fd2-school/api2'] = array(
+  'title' => 'API2',
+  'type' => MENU_LOCAL_TASK,
+  'page callback' => 'fd2_school_view',
+  'page arguments' => array('api2'),
+  'access arguments' => array('view fd2 school'),
+  'weight' => 140,  // Higher weight than API tab so it appears after it
+);
 
   return $items;
 };
