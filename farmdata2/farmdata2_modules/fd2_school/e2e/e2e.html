@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>My test page</title>
+  </head>
+  <body>
+    <div id="harvest-report" v-cloak>
+        <h1 data-cy="page-header">Harvest Report</h1>
+        <label for="title">Title:</label>
+        <input name="title" type="text" v-model="rptTitle" />
+        <br />
+        <br />
+            
+        <p>This page is a <i>mockup</i> of a simplified harvest report.</p>
+        <br />
+        <label for="startdate">Start:</label>
+        <input name="harvest-start" id="start" type="date" 
+        min="01-01-2014" :max="rptEndDate" v-model="rptStartDate" data-cy="start-date" />
+        <label for="enddate">End:</label>
+        <input name="harvest-end" id="end" type="date" 
+        :min="rptStartDate" max="01-01-2022" v-model = "rptEndDate" data-cy="end-date" />
+        <br />
+        <br />
+        <label for="crop">Crop:</label>
+        <select id="crop" name="crop" v-model="rptCrop" data-cy="crop-selector" >
+            <option v-for="crop in cropNames">{{ crop }}</option>
+        </select>
+        <label for="area">Area:</label>
+        <select id="area" name="area" v-model="rptArea">
+            <option v-for="area in areaNames">{{ area }}</option>
+        </select>
+        <br />
+        <br />
+        <button class="btn btn-primary" @click="genReport" data-cy="generate-report-button">Generate Report</button>
+        <div v-if="rptFarm">
+            <hr />
+        
+            <h1 data-cy="report-title">{{ rptTitle }}</h1>
+            
+            <br />
+            <p>Details:</p>
+            <ul>
+                <li data-cy="report-farm-name"><strong>Farm:</strong> {{ rptFarm }} </li>
+                <li data-cy="report-user-name"><strong>User:</strong> {{ rptUser }} </li>
+                <li><strong>Language:</strong> <span data-cy="report-language">{{ rptLanguage }}</span> </li>
+            </ul>
+            <br />
+            <ul>
+                <li><strong>Start:</strong>{{ rptStartDate }}</li>
+                <li><strong>End:</strong>{{ rptEndDate }}</li>
+                <li><strong>Crop:</strong>{{ rptCrop }}</li>
+            </ul>
+
+            <table border=1>
+                <tr v-if="harvestReportRows.length > 0">
+                    <th>Row</th>
+                    <th>Date</th>
+                    <th>Area</th>
+                    <th>Crop</th>
+                    <th>Yield</th>
+                    <th>Units</th>
+                </tr>
+                <tr v-for="(log, index) in harvestReportRows">
+                    <td>{{ index+1 }}</td>
+                    <td>{{ log.date }}</td>
+                    <td>{{ log.area }}</td>
+                    <td>{{ log.crop }}</td>
+                    <td>{{ log.yield }}</td>
+                    <td>{{ log.units }}</td>
+                </tr>
+                
+            </table>
+        </div>
+    </div>
+    <script>
+        var harvestReport = new Vue({
+            el: '#harvest-report',
+            data: {
+                rptTitle: 'Harvest Report',
+                rptStartDate: "2020-05-05",
+                rptEndDate: "2020-05-15",
+                rptCrop: "Kale",
+                rptArea: "All",
+                newHarvestLog: {},
+                harvestLogs: [],
+                rptFarm: "",
+                rptUser: "",
+                rptLanguage: "",
+                idToCropMap: new Map(),
+                idToAreaMap: new Map(),
+                harvestPages: [],
+            },
+            computed: {
+                cropNames() {
+                    return Array.from(this.idToCropMap.values())
+                },
+                areaNames() {
+                    return Array.from(this.idToAreaMap.values())
+                },
+                harvestReportRows() {
+                    let tableRows = []
+                    for(let log of this.harvestPages) {
+                        if (this.idToCropMap.get(log.data.crop_tid) === this.rptCrop) {
+                            let tableRow = {
+                                date: dayjs.unix(log.timestamp).format('MM-DD-YYYY'),
+                                area: log.area[0].name,
+                                yield: log.quantity[0].value,
+                                units: log.quantity[0].unit.name,
+                                crop: this.idToCropMap.get(log.data.crop_tid),
+                            }
+                            tableRows.push(tableRow)
+                        }
+                    }
+                    return tableRows
+                }
+            },
+            methods: {
+                genReport: function() {
+                    axios.get('/farm.json').then((response) => {
+                        this.rptLanguage = response.data.languages.en.language;
+                        this.rptUser = response.data.user.name;
+                        this.rptFarm = response.data.name;
+                    })
+                    .catch((error) => {
+                        console.log("Error Occurred")
+                    })
+                    
+                    let start = dayjs(this.rptStartDate).unix();
+                    let end = dayjs(this.rptEndDate).unix();
+                    let endpoint = "/log.json?type=farm_harvest&timestamp[ge]=" + start + "&timestamp[le]=" + end;
+                    getAllPages(endpoint, this.harvestPages)
+                    .then(() => {
+                        
+                    })
+                    .catch((err) => {
+                        console.log(err)
+                    })
+                }
+            },
+            created() {
+                console.log("HarvestReport Vue instance created!")
+                getIDToCropMap()
+                .then((theMap) => {
+                    this.idToCropMap = theMap
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+                getIDToAreaMap()
+                .then((theMap) => {
+                    this.idToAreaMap = theMap
+                })
+                .catch((err) => {
+                    console.log(err)
+                })
+            }
+        });
+
+        Vue.config.devtools = true;
+    </script>
+  </body>
+</html>
