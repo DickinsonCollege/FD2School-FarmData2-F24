@@ -6,7 +6,7 @@
     <ul>
         <li data-cy="farm-name"><strong>Farm:</strong> {{ farm }}</li>
         <li data-cy="farm-user"><strong>User:</strong> {{ user }}</li>
-        <li <span data-cy="language">{{ language }}</span> </li> 
+        <li> <span data-cy="language">{{ language }}</span> </li> 
         <li v-for="name in names">{{ name }} </li>
     </ul>
 
@@ -39,8 +39,14 @@
       
       <button data-cy="generate-report-button" @click="generateReport">Generate Report </button>
     <br>
-      <div v-if="harvestReportRows.length > 0">
-    <table border = "1">
+    <custom-table
+        v-if="harvestReportRows.length > 0"
+        :columns="columns"
+        :rows="formattedRows"
+        data-cy="harvest-report-table">
+    </custom-table>
+      <!-- <div v-if="harvestReportRows.length > 0"> -->
+    <!-- <table border = "1">
         <tr>
             <th> Row </th>
             <th> Date </th>
@@ -58,7 +64,7 @@
             <td> {{row.units}} </td>
         </tr>
 
-    </table>
+    </table> -->
 </div>
 <p v-else> No Matching Records</p>
 </div>
@@ -79,8 +85,8 @@ var firstVue = new Vue({
     },
 el: "#First-vue",
 components: {
-        // Register the components used and define the tag name to be used.
         'dropdown-with-all': DropdownWithAllComponent,
+        'custom-table': CustomTableComponent,
     },
 data: {
     header: "My Sample Harvest Report",
@@ -102,9 +108,42 @@ data: {
     areas: ["North Field", "South Field", "Greenhouse"],
     harvestLogs: [],
     idToCropMap: new Map(),
-    harvestLogsArray: []
+    harvestLogsArray: [],
+    columns: [
+            {"header": 'Date', visible: true, "inputType": {'type': 'no input'}},
+            {"header": 'Area', visible: true, "inputType": {'type': 'no input'}},
+            {"header": 'Crop', visible: true, "inputType": {'type': 'no input'}},
+            {"header": 'Yield', visible: true, "inputType": {'type': 'no input'}},
+            {"header": 'Units', visible: true, "inputType": {'type': 'no input'}},
+        ],
 },
     computed: {
+        formattedRows() {
+            let tableRows = []
+            for (let log of this.harvestLogsArray) {
+                let cropName = this.idToCropMap.get(log.data.crop_tid);
+                if (this.selectedCrop == 'All' || cropName == this.selectedCrop) {
+                    let formattedDate = dayjs.unix(log.timestamp).format('YYYY-MM-DD');
+                    let area = log.area[0].name
+                    let units = log.quantity[0].unit.name
+                    let yieldAmount = log.quantity[0].value
+
+                    let tableRow = {
+                        id: log.id,
+                        data: [
+                            formattedDate,
+                            area,
+                            cropName,
+                            yieldAmount,
+                            units,
+                        ]
+                    }                    
+                    
+                    tableRows.push(tableRow);
+                }
+            }
+            return tableRows;
+        },
         cropNames() {
             console.log("Map fetched successfully");
             return Array.from(this.idToCropMap.values());
@@ -115,14 +154,14 @@ data: {
             for (let log of this.harvestLogsArray) {
                 let cropName = this.idToCropMap.get(log.data.crop_tid) || "Unknown Crop";
                 if (this.selectedCrop !== 'All' && cropName !== this.selectedCrop) {
-            continue; 
-        }
+                    continue; 
+                }
         
-        let area = log.area ? log.area[0].name : "Unknown Area"; 
-        let harvestQuantity = log.quantity.find(q => q.label === "harvest");
-        let yieldAmount = harvestQuantity ? harvestQuantity.value : "N/A";
-        let units = harvestQuantity ? harvestQuantity.units : "N/A";
-        let formattedDate = dayjs.unix(log.timestamp).format('YYYY-MM-DD');
+                let area = log.area ? log.area[0].name : "Unknown Area"; 
+                let harvestQuantity = log.quantity.find(q => q.label === "harvest");
+                let yieldAmount = harvestQuantity ? harvestQuantity.value : "N/A";
+                let units = harvestQuantity ? harvestQuantity.units : "N/A";
+                let formattedDate = dayjs.unix(log.timestamp).format('YYYY-MM-DD');
                 let tableRow = {
                     date: formattedDate,
                     area: area,     
@@ -133,6 +172,7 @@ data: {
                 tableRows.push(tableRow);
             }
             return tableRows;
+            
         }
     },
     methods: {
