@@ -12,12 +12,16 @@
       
       <h1>{data-cy="report-header">{ reportTitle ? reportTitle : 'My Sample Harvest Report' }}</h1>
 
+      
       <div>
         <h3>Report Details</h3>
-        <p>Farm: {{ farm }}</p>
-        <p>User: {{ user }}</p>
-        <p>Language: {{ language }}</p>
+        <ul>
+          <li data-cy="farm-name"><strong>Farm:</strong> {{reportFarm || 'Sample Farm'}}</li>
+          <li data-cy="user-name"><strong>User:</strong> {{ reportUser || 'manager1' }}</li>
+          <li><strong>Language:</strong> <span data-cy="language">{{ reportLanguage || 'English' }}</span></li>
+        </ul>
       </div>
+      
 
       <!-- Start Date input and binding -->
       <div>
@@ -211,6 +215,11 @@
     // Log the request string
             console.log('Request String:', requestString);
             this.harvestLogResults=[];
+            this.harvestLogs.push({
+              farm: this.reportFarm,
+              user:this.reportUser,
+              language:this.reportLanguage
+            });
          
             getAllPages(requestString, this.harvestLogResults)
             .then(() => {
