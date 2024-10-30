@@ -70,6 +70,17 @@ To add a new sub-tab to the `fd2_xyz` module:
          'weight' => 120,
        );
 
+       $items['farm/fd2-school/html'] = array(
+        'title' => 'HTML',
+        'type' => MENU_LOCAL_TASK,
+        'page callback' => 'fd2_school_view',
+        'page arguments' => array('html'),
+        'access arguments' => array('View FD2 School'),
+        'weight' => 140,
+       );
+
+       return $items;
+
        // ... omitted code ...
    };
    // ... omitted code ...
