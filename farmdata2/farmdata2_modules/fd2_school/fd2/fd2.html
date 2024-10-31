@@ -10,11 +10,12 @@
 
     <div class="input-crop">
         <label for="crop">Crop:</label>
-        <select id="crop" name="crop" data-cy="crop-dropdown">
-            <option value="broccoli">Broccoli</option>
-            <option value="kale" selected>Kale</option>
-            <option value="peas">Peas</option>
-        </select>
+        <dropdown-with-all data-cy = crop-dropdown
+        :includes-all="true"
+        selected-val="All"
+        @selection-changed = "cropChange"
+        :dropdown-list = "cropNames">
+        </dropdown-with-all>
     </div>
 
     <div class="input-field">
@@ -87,6 +88,9 @@
     
   var myReportSample = new Vue({
     el: "#my-ReportSample",
+    components:{
+        'dropdown-with-all': DropdownWithAllComponent,
+    },
     created(){
         getIDToCropMap()
             .then((theMap) => {
@@ -102,7 +106,7 @@
       start: "2020-05-05",
       end: "2021-02-02",
       crop:'Kale',
-      crops:[],
+      crops:"All",
       field : "All",
       areas : [],
       logs:[],
