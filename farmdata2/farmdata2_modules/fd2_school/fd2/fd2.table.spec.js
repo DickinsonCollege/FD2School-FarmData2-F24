@@ -30,16 +30,19 @@ describe("Harvest Report Table Tests", () => {
   });
 
   it("should filter table rows by selected crop", () => {
-    // Generate the report with default date range
-    cy.get("[data-cy=generate-report-button").click();
+    // Generate the report with the default date range
+    cy.get("[data-cy=generate-report-button]").click();
 
-    // Select a crop from the dropdown
-    const cropToSelect = "Broccoli"; // Change this to crop in the dataset
+    // Select "ASPARAGUS" from the dropdown
+    const cropToSelect = "ASPARAGUS";
     cy.get("[data-cy=crop-dropdown] > select").select(cropToSelect);
-    // Count rows in the table body after filtering
-    cy.get("[data-cy=harvest-table] tbody tr").then((rows) => {
-      const rowCount = rows.length;
-      cy.wrap(rows).should("have.length", rowCount);
+
+    // Verify there are exactly 4 rows for ASPARAGUS
+    cy.get("[data-cy=harvest-table] tbody tr").should("have.length", 4);
+
+    // Verify each row has "ASPARAGUS" in the crop column
+    cy.get("[data-cy=harvest-table] tbody tr").each((row) => {
+      cy.wrap(row).find("td").eq(3).should("have.text", cropToSelect); // Crop column index may vary
     });
   });
 });
