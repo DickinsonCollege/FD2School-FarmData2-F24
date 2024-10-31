@@ -23,18 +23,19 @@ describe("Test the harvest report default values", () => {
         cy.visit('/farm/fd2-school/fd2');
         cy.get('[data-cy="crop-dropdown"]').should('exist'); // Check that the dropdown exists
       });
+
+
     
-      it('should contain crop options within the dropdown', () => {
-        cy.get('[data-cy="crop-dropdown')
-        .children('option')
-        .should('have.length',112);
-
-        cy.get('[data-cy="crop-dropdown"]').children().eq(0)
-            .should('have.text', 'All'); // First crop
-        cy.get('[data-cy="crop-dropdown"]').children().eq(4)
-            .should('have.text', 'BEAN-DRY'); // Fifth crop
-        cy.get('[data-cy="crop-dropdown"]').children().last()
-            .should('have.text', 'ZUCCHINI');
-      });
-
+    it("Check the crop dropdown", () => {
+        // First option is always 'All'
+        cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option0]")
+        .should("have.text", "All")
+        cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option1]")
+        .should("have.text", "ARUGULA")
+        cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input] > [data-cy=option4]")
+        .should("have.text", "BEAN-DRY")
+        cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input]").children()
+        .should("have.length", 112)
+    });
 });
+
