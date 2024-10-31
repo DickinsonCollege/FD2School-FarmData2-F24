@@ -1,7 +1,7 @@
 describe("Test the harvest report default values", () => {
     beforeEach(() => {
         cy.login("manager1", "farmdata2")
-        cy.visit("/farm/fd2-school/e2e")
+        cy.visit("/farm/fd2-school/fd2")
         
         
 
@@ -20,19 +20,19 @@ describe("Test the harvest report default values", () => {
         // Empty test, ready to be filled in later with assertions for default values
     });
     it('should find the crop dropdown element', () => {
-        cy.visit('/farm/fd2-school/e2e');
+        cy.visit('/farm/fd2-school/fd2');
         cy.get('[data-cy="crop-dropdown"]').should('exist'); // Check that the dropdown exists
       });
     
       it('should contain crop options within the dropdown', () => {
         cy.get('[data-cy="crop-dropdown')
         .children('option')
-        .should('have.length',111);
+        .should('have.length',112);
 
         cy.get('[data-cy="crop-dropdown"]').children().eq(0)
-            .should('have.text', 'ARUGULA'); // First crop
+            .should('have.text', 'All'); // First crop
         cy.get('[data-cy="crop-dropdown"]').children().eq(4)
-            .should('have.text', 'BEAN-FAVA'); // Fifth crop
+            .should('have.text', 'BEAN-DRY'); // Fifth crop
         cy.get('[data-cy="crop-dropdown"]').children().last()
             .should('have.text', 'ZUCCHINI');
       });
