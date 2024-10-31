@@ -7,18 +7,24 @@
     <style>
         table{
             width: 25%;
-            border:1px solid black;
+            border:2px solid black;
             
         }
         th,td{
             border: 1px solid black;
         }
+        
     </style>
     
   </head>
   <body>
     <div id="vue-app" v-cloak>
-        <h1 data-cy="page-header">Harvest Report</h1>
+        <h1>Harvest Report</h1>
+
+        
+        <input type="text" v-model="reportTitle" placeholder=" Enter Report Title"/>
+        
+        
 
         <h3>Start Date: {{ startDate }}</h3>
         <label for="start-date">Start Date:</label>
@@ -46,8 +52,11 @@
             <option v-for="area in areaNames" :key="area" :value="area">{{ area }}</option>
         </select>
 
-        <button @click='generateReport'>Generate Report</button>
+        <h3></h3>
 
+        <button @click='generateReport' data-cy="generate-report-button">Generate Report</button>
+
+        <h2 data-cy="report-header" v-if="reportGenerated">{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
 
         <h2>Harvest Logs</h2>
         <div v-if="harvestReportRows.length > 0">
@@ -92,10 +101,12 @@
             el: '#vue-app',
             
             data: {
+                reportTitle:'My Sample Harvest Report',
                 startDate: "2020-05-05",
                 endDate: "2020-05-15",
                 selectedCrop:"",
                 selectedArea: "",
+                reportGenerated: false,//just for report title visibility purposes
                 idToAreaMap: new Map(),
                 idToCropMap: new Map(),
                 allHarvestLogs: []
@@ -201,14 +212,16 @@
             
             methods: {
                 generateReport: function(){
+                    this.reportGenerated = true;
 
                     this.allHarvestLogs = [];
-
+                    
                     requestStr="/log.json?type=farm_harvest";
 
                     getAllPages(requestStr, this.allHarvestLogs)
                     .then(() =>{
                         console.log("All Harvest logs grabbed",this.allHarvestLogs);
+                        
                     })
                     .catch((err)=>{
                         console.error("Error grabbing the Harvest Logs",err);
