@@ -52,12 +52,18 @@
             <option v-for="area in areaNames" :key="area" :value="area">{{ area }}</option>
         </select>
 
+       
         <h3></h3>
-
         <button @click='generateReport' data-cy="generate-report-button">Generate Report</button>
 
-        <h2 data-cy="report-header" v-if="reportGenerated">{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
+        <li v-if="reportGenerated" data-cy="farm-name"><strong>Farm:</strong> {{ farmName }}</li>
+        <li v-if="reportGenerated" data-cy="user-name"><strong>User:</strong> {{ userName }}</li>
+        
+        <span v-if="reportGenerated" data-cy="language">{{ language }}</span>
+       
 
+        <h2 data-cy="report-header" v-if="reportGenerated">{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
+        
         <h2>Harvest Logs</h2>
         <div v-if="harvestReportRows.length > 0">
             <table>
@@ -109,7 +115,10 @@
                 reportGenerated: false,//just for report title visibility purposes
                 idToAreaMap: new Map(),
                 idToCropMap: new Map(),
-                allHarvestLogs: []
+                allHarvestLogs: [],
+                farmName:"",
+                userName:"",
+                language:""
             },
             created(){
                 getIDToCropMap()
@@ -144,6 +153,8 @@
 	                for(let log of this.allHarvestLogs) {
                         let cropName = this.idToCropMap.get(log.data.crop_tid);
                         let areaName = log.area[0].name;
+                        
+
 
                         //for the double all scenario. Just show all harvest reports
                         if(this.selectedCrop == "" && this.selectedArea==""){
@@ -213,21 +224,39 @@
             methods: {
                 generateReport: function(){
                     this.reportGenerated = true;
-
+                    
                     this.allHarvestLogs = [];
-                    
+
                     requestStr="/log.json?type=farm_harvest";
+                    infoRequest="/farm.json";
 
-                    getAllPages(requestStr, this.allHarvestLogs)
-                    .then(() =>{
-                        console.log("All Harvest logs grabbed",this.allHarvestLogs);
-                        
-                    })
-                    .catch((err)=>{
-                        console.error("Error grabbing the Harvest Logs",err);
-
-                    })
                     
+                    Promise.all([
+                        getAllPages(requestStr, this.allHarvestLogs),
+                        fetch(infoRequest)
+                            .then((response) =>{
+                                
+                                return response.json();
+                            })
+                            .then((data)=>{
+                                this.farmName = data.name;
+                                this.userName = data.user.name;
+                                this.language = data.languages.en.language;
+
+                            })
+                        .then(()=>{
+                            console.log("All Harvest logs grabbed",this.allHarvestLogs)
+
+                        })
+                        
+                        .catch((err)=>{
+                            console.error("Error grabbing the Harvest Logs",err);
+
+                        })
+
+
+                    ])
+                
                     
                 },
                 transformMapToArray(map){

@@ -13,4 +13,17 @@ describe("Test the harvest report user interactions", () => {
         cy.get("[data-cy=report-header]")
             .should("be.visible")
     })
+    it("Display Farm info, username, and language",()=>{
+        cy.get("[data-cy=generate-report-button]").click();
+
+        cy.get("[data-cy=farm-name]")
+            .should("have.text","Farm: Sample Farm");
+
+        cy.get("[data-cy=user-name]")
+            .should("contain.text","manager1");
+
+        cy.get("[data-cy=language]")
+            .should('have.text',"en");
+
+    })
 })
