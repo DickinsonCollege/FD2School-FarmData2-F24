@@ -63,26 +63,12 @@
 
     <h3>Harvest Data</h3>
 
-    <table border=1>
-        <tr v-if="allPagesArr.length>0">
-            <th>Row</th>
-            <th>Date</th>
-            <th>Area</th>
-            <th>Crop</th>
-            <th>Yield</th>
-            <th>Units</th>
-        </tr>
-
-        <tr v-for="(log, index) in harvestReportRows">
-            <td>{{index+1}}</td>
-            <td>{{log.date}}</td>
-            <td>{{log.area}}</td>
-            <td>{{log.cr}}</td>
-            <td>{{log.yield}}</td>
-            <td>{{log.units}}</td>
-        </tr>
-
-    </table>
+    <custom-table
+        v-if="harvestReportRows.length>0"
+        :columns="columns"
+        :rows="formattedRows"
+        data-cy="harvest-report-table">
+    </custom-table>
 <script src="https://unpkg.com/vue@2"></script>
 <script>
     
@@ -114,27 +100,47 @@
       idToAreaMap: new Map(),
       allPagesArr: [],
       reportGenerated: false,
+      harvestLogsArray: [],
+      columns:[
+        {"header": 'Date', visible: true, "inputType": {'type': 'no input'}},
+        {"header": 'Area', visible: true, "inputType": {'type': 'no input'}},
+        {"header": 'Crop', visible: true, "inputType": {'type': 'no input'}},
+        {"header": 'Yield', visible: true, "inputType": {'type': 'no input'}},
+        {"header": 'Units', visible: true, "inputType": {'type': 'no input'}},
+        ],
     },
     computed:{
         cropNames(){
             cropVals = this.idToCropMap.values();
             return cropVals;
-        }
-    },
+        },
+        formattedRows() {
+            let tableRows = []
+            for (let log of this.harvestLogsArray) {
+                let cropName = this.idToCropMap.get(log.data.crop_tid);
+                if (this.selectedCrop == 'All' || cropName == this.selectedCrop) {
+                    let formattedDate = dayjs.unix(log.timestamp).format('YYYY-MM-DD');
+                    let area = log.area[0].name
+                    let units = log.quantity[0].unit.name
+                    let yieldAmount = log.quantity[0].value
 
-    harvestReportRows() {
-	let tableRows = []
-	for(let log of this.harvestLogs) {
-		let tableRow = {
-			date: log.timestamp,
-		}
-        if(tableRow.cr == this.crop) {
-            tableRows.push(tableRow)
-        }
-	}
-	return tableRows
-    },
+                    let tableRow = {
+                        id: log.id,
+                        data: [
+                            formattedDate,
+                            area,
+                            cropName,
+                            yieldAmount,
+                            units,
+                        ]
+                    }                    
 
+                    tableRows.push(tableRow);
+                }
+            }
+            return tableRows;
+        },
+    },
 
     methods:{
         generate: function(){
