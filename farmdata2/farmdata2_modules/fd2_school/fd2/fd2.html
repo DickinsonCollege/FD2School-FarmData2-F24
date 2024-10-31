@@ -153,7 +153,7 @@
                         yield: log.quantity[0].value,
                         unit: log.quantity[0].unit.name,
 		                }
-                        if (tableRow.crop == this.rptCrop) {
+                        if (tableRow.crop == this.rptCrop || this.rptCrop=="All") {
                             tableRows.push(tableRow);
                         }
 	                }
