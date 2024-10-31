@@ -126,6 +126,24 @@
                         }))
                         .filter(row => row.cr === this.crop);
                 },
+                harvestReportRows() {
+                    let tableRows = []
+                    for(let log of this.allPagesArr) {
+                      let tableRow = {
+                        date: dayjs.unix(log.timestamp).format('MM/DD/YYYY'),
+                        area: log.area[0].name,
+                        yield: log.quantity[0].value,
+                        units: log.quantity[0].unit.name,
+                        cr: this.idToCropMap.get(log.data.crop_tid),
+                      }
+                        if(tableRow.cr == this.crop || this.crop == 'All') {
+                          tableRows.push(tableRow)
+                        }
+                      
+                    }
+                    return tableRows
+                },  
+
             },
             methods: {
                 onCropChange(newCrop) {
