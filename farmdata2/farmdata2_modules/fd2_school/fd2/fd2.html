@@ -4,10 +4,18 @@
     <meta charset="UTF-8" />
     <title>Harvest Report</title>
     <style>
-      table,
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
       th,
       td {
         border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
       }
       [v-cloak] {
         display: none;
@@ -16,7 +24,7 @@
   </head>
   <body>
     <div id="app" v-cloak>
-      <h1 data-cy="page-header">{{'Harvest Report'}}</h1>
+      <h1 data-cy="page-header">{{ 'Harvest Report' }}</h1>
       <p>This page is a <i>mockup</i> of a simplified harvest report</p>
 
       <h2>Names List</h2>
@@ -25,7 +33,7 @@
         <li v-for="name in names" :key="name">{{ name }}</li>
       </ul>
 
-      <!-- New Title Input Field -->
+      <!-- Title Input Field -->
       <label for="reportTitle">Title: </label>
       <input
         type="text"
@@ -35,7 +43,7 @@
         placeholder="Enter report title" />
       <br /><br />
 
-      <!-- Start -->
+      <!-- Start Date -->
       <label for="start">Start: </label>
       <input
         type="date"
@@ -45,7 +53,7 @@
         :max="endDate"
         data-cy="start-date" />
 
-      <!-- End -->
+      <!-- End Date -->
       <label for="end">End: </label>
       <input
         type="date"
@@ -75,7 +83,7 @@
       </select>
       <br /><br />
 
-      <!-- New Generate Report Button -->
+      <!-- Generate Report Button -->
       <button
         type="button"
         @click="generateReport"
@@ -99,7 +107,7 @@
           </li>
         </ul>
 
-        <!-- Replace HTML table with CustomTableComponent -->
+        <!-- Custom Table Component for Harvest Report -->
         <custom-table
           :columns="columns"
           :rows="tableRows"
@@ -109,8 +117,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
       Vue.config.devtools = true;
+
       var app = new Vue({
         el: "#app",
         components: {
@@ -120,7 +130,6 @@
         data: {
           reportTitle: "",
           names: [],
-          crops: ["Broccoli", "Kale", "Peas"],
           fields: ["All", "Chuau-1", "SQ7"],
           harvestLogs: [],
           startDate: "2020-05-05",
@@ -151,62 +160,38 @@
             return Array.from(this.idToCropMap.values());
           },
 
-          harvestReportRows() {
-            let tableRows = [];
-            for (let log of this.harvestLogs) {
-              let cropName = log.crop || log.name.split(" ")[1]; // Extract crop name from log
-              let tableRow = {
-                date: new Date(log.timestamp * 1000).toLocaleDateString(),
-                area: log.area.length > 0 ? log.area[0].name : "Unknown",
-                crop: cropName,
-                yield:
-                  log.quantity.find((q) => q.label === "Harvest")?.value ||
-                  "N/A",
-                units:
-                  log.quantity.find((q) => q.label === "Harvest")?.unit.name ||
-                  "N/A",
-              };
-
-              if (
-                this.selectedCrop === "All" ||
-                this.selectedCrop === cropName
-              ) {
-                tableRows.push(tableRow);
-              }
-            }
-            return tableRows;
-          },
-
-          // Computed property for Rows
           tableRows() {
             return this.harvestLogs
               .filter(
                 (log) =>
-                  this.selectedCrop == "All" || log.crop == this.selectedCrop
+                  this.selectedCrop === "All" ||
+                  log.name.split(" ")[1] === this.selectedCrop
               )
               .map((log, index) => {
-                let cropName = log.crop || log.name.split(" ")[1]; // Extract crop name from log
+                // Extract crop name from the `name` field
+                const cropName = log.name.split(" ")[1];
+
                 return {
-                  id: log.id, // Unique identifier
+                  id: log.id,
                   data: [
                     index + 1, // Row number
-                    new Date(log.timestamp * 1000).toLocaleDateString(),
-                    log.area.length > 0 ? log.area[0].name : "Unknown",
-                    cropName,
+                    new Date(log.timestamp * 1000).toLocaleDateString(), // Date
+                    log.area.length > 0 ? log.area[0].name : "Unknown", // Area name
+                    cropName, // Crop name
                     log.quantity.find((q) => q.label === "Harvest")?.value ||
-                      "N/A",
+                      "N/A", // Yield value
                     log.quantity.find((q) => q.label === "Harvest")?.unit
-                      .name || "N/A",
-                    "Edit",
-                    "Delete",
+                      .name || "N/A", // Unit name
+                    "Edit", // Edit placeholder
+                    "Delete", // Delete placeholder
                   ],
                 };
               });
           },
         },
-
         methods: {
           generateReport() {
+            // Fetch farm details
             axios
               .get("/farm.json")
               .then((response) => {
@@ -215,16 +200,13 @@
                 this.language = response.data.languages.en.name;
               })
               .catch((error) => {
-                console.log("Error Occurred", error);
+                console.log("Error fetching farm details:", error);
               });
 
-            this.farm = "Sample Farm";
-            this.user = "manager1";
-            this.language = "English";
-
-            let startTimestamp = dayjs(this.startDate).unix();
-            let endTimestamp = dayjs(this.endDate).unix();
-            let requestString = `/log.json?type=farm_harvest&timestamp[ge]=${startTimestamp}&timestamp[le]=${endTimestamp}`;
+            // Construct API request for harvest logs
+            const startTimestamp = new Date(this.startDate).getTime() / 1000;
+            const endTimestamp = new Date(this.endDate).getTime() / 1000;
+            const requestString = `/log.json?type=farm_harvest&timestamp[ge]=${startTimestamp}&timestamp[le]=${endTimestamp}`;
 
             getAllPages(requestString, this.harvestLogs)
               .then(() => {
@@ -242,12 +224,13 @@
           },
         },
         created() {
+          // Fetch ID to Crop Map
           getIDToCropMap("/taxonomy_term.json?bundle=farm_crops", "tid", "name")
             .then((map) => {
               this.idToCropMap = map;
             })
             .catch((error) => {
-              console.log("Error fetching the ID to Crop Map:", error);
+              console.log("Error fetching crop map:", error);
             });
         },
       });

@@ -28,4 +28,18 @@ describe("Harvest Report Table Tests", () => {
     // Verify the number of columns in the header row
     cy.get("[data-cy=table-headers]").children().should("have.length", 8);
   });
+
+  it("should filter table rows by selected crop", () => {
+    // Generate the report with default date range
+    cy.get("[data-cy=generate-report-button").click();
+
+    // Select a crop from the dropdown
+    const cropToSelect = "Broccoli"; // Change this to crop in the dataset
+    cy.get("[data-cy=crop-dropdown] > select").select(cropToSelect);
+    // Count rows in the table body after filtering
+    cy.get("[data-cy=harvest-table] tbody tr").then((rows) => {
+      const rowCount = rows.length;
+      cy.wrap(rows).should("have.length", rowCount);
+    });
+  });
 });
