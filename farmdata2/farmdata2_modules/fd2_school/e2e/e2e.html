@@ -22,12 +22,12 @@
 
         <h3>Start Date: {{ startDate }}</h3>
         <label for="start-date">Start Date:</label>
-        <input type="date" id="start-date" v-model="startDate" v-bind:max="endDate">
+        <input type="date" id="start-date" v-model="startDate" v-bind:max="endDate" data-cy="start-date">
         
 
         <h3>End Date: {{ endDate }}</h3>
         <label for="end-date">End Date:</label>
-        <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate">
+        <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate" data-cy="end-date">
 
 
         <h3>Selected Crop: {{ selectedCrop }}</h3>
@@ -92,8 +92,8 @@
             el: '#vue-app',
             
             data: {
-                startDate: "",
-                endDate: "",
+                startDate: "2020-05-05",
+                endDate: "2020-05-15",
                 selectedCrop:"",
                 selectedArea: "",
                 idToAreaMap: new Map(),
