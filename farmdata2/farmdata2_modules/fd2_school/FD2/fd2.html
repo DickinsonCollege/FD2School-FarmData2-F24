@@ -9,19 +9,17 @@
         <input type="text" v-model="reportTitle" placeholder="Enter report title">
       </div>
 
-      
-      <h1>{data-cy="report-header">{ reportTitle ? reportTitle : 'My Sample Harvest Report' }}</h1>
+      <h1 data-cy="report-header">{{ reportTitle ? reportTitle : 'My Sample Harvest Report' }}</h1>
 
-      
       <div>
         <h3>Report Details</h3>
         <ul>
-          <li data-cy="farm-name"><strong>Farm:</strong> {{reportFarm || 'Sample Farm'}}</li>
+          <li data-cy="farm-name"><strong>Farm:</strong> {{ reportFarm || 'Sample Farm' }}</li>
           <li data-cy="user-name"><strong>User:</strong> {{ reportUser || 'manager1' }}</li>
           <li><strong>Language:</strong> <span data-cy="language">{{ reportLanguage || 'English' }}</span></li>
+          <li><strong>Crop:</strong> <span data-cy="crop-name">{{ reportCrop || 'All' }}</span></li>
         </ul>
       </div>
-      
 
       <!-- Start Date input and binding -->
       <div>
@@ -32,43 +30,35 @@
       <!-- End Date input and binding -->
       <div>
         <label for="end-date">End:</label>
-        <input type="date" v-model="reportEndDate" :min="reportStartDate" min="2020-05-05" max="2022-01-01" data-cy="end-date">
+        <input type="date" v-model="reportEndDate" :min="reportStartDate" max="2022-01-01" data-cy="end-date">
       </div>
 
-      <!-- Updated Crop selection input using computed property -->
+      <!-- Crop selection using dropdown-with-all component -->
       <div>
         <label for="crop">Crop:</label>
-        <select v-model="reportCrop" data-cy="crop-dropdown">
-          <option v-for="crop in cropNames" :key="crop">{{ crop }}</option>
-        </select>
-      </div>
-
-      <!-- Area selection input and binding -->
-      <div>
-        <label for="area">Area:</label>
-        <select v-model="reportArea">
-          <option v-for="area in areas" :key="area">{{ area }}</option>
-        </select>
+        <dropdown-with-all 
+          :items="cropNames" 
+          v-model="reportCrop" 
+          data-cy="crop-dropdown"
+          @selection-changed="updateCropSelection"
+        ></dropdown-with-all>
       </div>
 
       <!-- Harvest Logs Table -->
       <h3>Harvest Logs</h3>
-
-      <div v-if="harvestLogs&&harvestLogs.length > 0">
+      <div v-if="harvestLogs && harvestLogs.length > 0">
         <table border="1">
           <thead>
             <tr>
               <th>Date</th>
               <th>Area</th>
               <th>Crop</th>
-              <th> Yield</th>
+              <th>Yield</th>
               <th>Units</th>
             </tr>
           </thead>
           <tbody>
-            <!-- v-for to dynamically generate table rows -->
             <tr v-for="(log, index) in harvestReportRows" :key="index">
-              
               <td>{{ log.date }}</td>
               <td>{{ log.area }}</td>
               <td>{{ log.crop }}</td>
@@ -82,33 +72,6 @@
         No matching records found.
       </div>
 
-      <!-- Names List -->
-      <div>
-        <h2>Names List</h2>
-        <ul>
-          <li v-if="names.length === 0">No names yet!</li>
-          <li v-for="(name, index) in names" :key="name">{{ name + "(" + index + ")" }}</li>
-        </ul>
-      </div>
-
-      <!-- Cards List -->
-      <div>
-        <h3>Cards List</h3>
-        <button v-if="!showCards" @click="showCards = true">Show Cards</button>
-        <button v-else @click="showCards = false">Hide Cards</button>
-        
-        <div v-if="showCards">
-          <ul>
-            <li v-for="c in cards" :key="c.suit + c.rank">{{ c.rank }} of {{ c.suit }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <div>
-        <label for="new-field">Name:</label>
-        <input type="text" v-model="newField" @keyup.enter="addName" placeholder="">
-        <button @click="addName" :disabled="!newField.trim()">Add Name</button>
-      </div>
       <div>
         <button @click="generateReport" data-cy="generate-report-button">Generate Report</button>
       </div>
@@ -116,42 +79,61 @@
     
     <script src="https://unpkg.com/vue@2"></script>
     
+    <!-- Dropdown-with-all component -->
+    <script>
+      Vue.component('dropdown-with-all', {
+        props: ['items', 'value'],
+        template: `
+          <select v-model="selected" @change="updateValue" data-cy="crop-dropdown">
+            <option value="All">All</option>
+            <option v-for="item in items" :key="item">{{ item }}</option>
+          </select>
+        `,
+        data() {
+          return {
+            selected: this.value
+          };
+        },
+        methods: {
+          updateValue() {
+            this.$emit('input', this.selected);
+          }
+        },
+        watch: {
+          value(newValue) {
+            this.selected = newValue;
+          }
+        }
+      });
+    </script>
+
     <!-- Vue instance -->
     <script>
       var app = new Vue({
         el: "#vue-app",
-        
+        components: {
+          'dropdown-with-all': Vue.component('dropdown-with-all') // Define only the dropdown-with-all component
+        },
         data: {
           reportTitle: "My Sample Harvest Report",
           reportStartDate: '2020-05-05',
           reportEndDate: '2020-05-15',
-          reportCrop: '',
-          reportArea: '',
+          reportCrop: 'All',
           names: [],
-          areas: ["All", "Chuau-1", "SQ7"],
-          cards: [
-            { suit: "H", rank: "3" },
-            { suit: "S", rank: "K" },
-            { suit: "D", rank: "7" }
-          ],
           harvestLogs: [],
-          harvestLogResults: [],
-          newField: "",
-          showCards: false,
           farm: "",
           user: "",
           language: "",
-          idToCropMap: new Map()  // Added to store the crop map
-          
+          idToCropMap: new Map() // Store the crop map
         },
-        created(){
+        created() {
           console.log("HarvestReport Vue instance created!");
           getIDToCropMap()
             .then((theMap) => {
               this.idToCropMap = theMap;
-              console.log("crop map loaded:", this.idToCropMap);
+              console.log("Crop map loaded:", this.idToCropMap);
             })
-            .catch((err)=> {
+            .catch((err) => {
               console.log("Error fetching crop map", err);
             });
         },
@@ -159,87 +141,37 @@
           cropNames() {
             return this.idToCropMap ? Array.from(this.idToCropMap.values()) : [];
           },
-          harvestReportRows(){
-            let tableRows=[];
-            for(let log of this.harvestLogs){
-                let tableRow={
-                    date:dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
-                    area: log.area[0].name,
-                    crop:this.idToCropMap.get(log.data.crop_tid),
-                    yield: log.quantity[0].value,
-                    units:log.quantity[0].unit.name,
-
-                };
-                if (this.reportCrop==="All" || tableRow.crop===this.reportCrop){
-                    tableRows.push(tableRow);
-                }
-                
-
-                
-            }
-            return tableRows;
+          harvestReportRows() {
+            return this.harvestLogs.map(log => ({
+              date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
+              area: log.area[0].name,
+              crop: this.idToCropMap.get(log.data.crop_tid),
+              yield: log.quantity[0].value,
+              units: log.quantity[0].unit.name,
+            })).filter(row => this.reportCrop === 'All' || row.crop === this.reportCrop);
           }
-          
         },
-          
-         
-        
-
         methods: {
-          addName: function() {
-            const trimmedName = this.newField.trim();
-            if (trimmedName) {
-              this.names.push(trimmedName);
-              this.newField = '';
-            }
-          },
-          generateReport: function() {
-            axios.get('/farm.json')
-                .then((response) => {
-                    // Set farm details from the response data
-                    this.reportFarm = response.data.name;
-                    this.reportUser = response.data.user.name;
-                    this.reportLanguage = response.data.user.language;
-                    this.harvestLogs = response.data.harvestLogs;  // Update this with the correct key from the API response
-                })
-                .catch((err) => {
-                    console.error('Error fetching farm data:', err);
-                });
-            let startTimestamp = dayjs(this.reportStartDate).unix();
-            let endTimestamp = dayjs(this.reportEndDate).unix();
-            console.log("Start TimeStamp: ",startTimestamp);
-            console.log("End Timestamp",endTimestamp);
-
+          generateReport() {
+            const startTimestamp = dayjs(this.reportStartDate).unix();
+            const endTimestamp = dayjs(this.reportEndDate).unix();
             let requestString = `/log.json?type=farm_harvest&timestamp[ge]=${startTimestamp}&timestamp[le]=${endTimestamp}`;
-
-    // Log the request string
-            console.log('Request String:', requestString);
-            this.harvestLogResults=[];
-            this.harvestLogs.push({
-              farm: this.reportFarm,
-              user:this.reportUser,
-              language:this.reportLanguage
-            });
-         
-            getAllPages(requestString, this.harvestLogResults)
-            .then(() => {
-            // Log retrieved harvest logs
-                console.log("All harvest logs retrieved:", this.harvestLogResults);
-                this.harvestLogs=this.harvestLogResults;
-            
-          })
-            .catch((err) => {
-                console.log("Error occurred during the request:", err);
-          });
-      }
-    }
-});
-
-
-
-       
+            getAllPages(requestString, this.harvestLogs)
+              .then(() => {
+                console.log("All harvest logs retrieved:", this.harvestLogs);
+              })
+              .catch((err) => {
+                console.log("Error during the request:", err);
+              });
+          },
+          updateCropSelection(selectedCrop){
+            this.reportCrop=selectedCrop;
+          }
+        }
+      });
+      
       Vue.config.devtools = true;
     </script>
   </body>
-</html>
+</html> 
 
