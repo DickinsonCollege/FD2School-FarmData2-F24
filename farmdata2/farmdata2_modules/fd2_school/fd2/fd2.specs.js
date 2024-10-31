@@ -16,9 +16,12 @@ describe("Test the harvest report default values", ()=>{
     it("Check the crop dropdown", ()=>{
         cy.get("[data-cy= crop-dropdown]").children().then((options)=>{
             expect(options).to.have.length(3)
-            cy.get("[data-cy=crop-dropdown]").children().eq(0).should('have.text', 'Broccoli')
-            cy.get("[data-cy=crop-dropdown]").children().eq(1).should('have.text', 'Kale'); - 1
-            cy.get("[data-cy=crop-dropdown]").children().eq(options.length - 1).should('have.text', 'Peas')
+            cy.get("[data-cy=crop-dropdown]) > [data-cy=dropdown-input] > [data-cy=option1]")
+            .should('have.text', 'Broccoli')
+            cy.get("[data-cy=crop-dropdown]).> [data-cy=dropdown-input] > [data-cy=option2]")
+            .should('have.text', 'Kale'); - 1
+            cy.get("[data-cy=crop-dropdown]).> [data-cy=dropdown-input] > [data-cy=option2]")
+            .should('have.text', 'Peas')
         })
     })
     it("Check the Generate Report button", ()=> {
