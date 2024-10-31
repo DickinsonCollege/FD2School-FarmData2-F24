@@ -16,10 +16,23 @@
 
         <br><br>
         
-        <label for="crop">Crop:</label>
-        <select data-cy="crop-names" id="crop" name="crop" v-model="rptCrop">
-            <option v-for="crop in cropNames">{{crop}}</option>
-        </select>
+    
+
+
+        <dropdown-with-all data-cy="crop-names" 
+            includes-all
+            :selected-val='rptCrop'
+            :dropdown-list='cropNames'
+            @selection-changed="cropChange"
+            :disabled='false'>
+            Pick a Crop: 
+        </dropdown-with-all>
+
+
+
+
+
+
 
         <label for="area">Area:</label>
         <select data-cy="area-names" id="area" name="area" v-model="rptArea">
@@ -96,12 +109,12 @@
                     this.idToCropMap= theMap;
                     console.log("got the idToCropMap");
 
-                    // Set the default crop to the first value
-                    const cropValues = Array.from(this.idToCropMap.values());
-                    if (cropValues.length > 0) {
-                        this.rptCrop = cropValues[0];
-                        console.log("Default crop set to:", this.rptCrop);
-                    }
+                    // // Set the default crop to the first value
+                    // const cropValues = Array.from(this.idToCropMap.values());
+                    // if (cropValues.length > 0) {
+                    //     this.rptCrop = cropValues[0];
+                    //     console.log("Default crop set to:", this.rptCrop);
+                    // }
 
                 }).catch((err) => {
                     console.log("failed to get the idToCropMap");
@@ -154,7 +167,7 @@
                 rptTitle:"My Sample Harvest Report",
                 rptStart:"2020-05-05",
                 rptEnd:"2020-05-15",
-                rptCrop:"",
+                rptCrop:"All",
                 rptArea:"",
                 rptCropList: [ "Broccoli", "kale", "Peas"],
                 rptAreaList: [ "all", "Chuau-1", "SQ7"],
@@ -178,7 +191,15 @@
                      this.user="manager1"
                      this.language="English"
                 },
+                cropChange(newCrop) {
+                    this.rptCrop = newCrop
+                },
+
             },
+            components: {
+                'dropdown-with-all': DropdownWithAllComponent,
+            },
+
         });
         Vue.config.devtools = true;
     </script>
