@@ -19,13 +19,13 @@ describe("Test the harvest report default values", () => {
     })
 
     it("Check the crop selector", () => {
-        cy.get("[data-cy=crop-selector]").children().eq(0)
-            .should("have.text","ALL")
-        cy.get("[data-cy=crop-selector]").children().eq(4)
+        cy.get("[data-cy=option0]")
+            .should("have.text","All")
+        cy.get("[data-cy=option4]")
             .should("have.text","BEAN-DRY")
-        cy.get("[data-cy=crop-selector]").children().eq(110)
+        cy.get("[data-cy=option111]")
             .should("have.text","ZUCCHINI")
-        cy.get("[data-cy=crop-selector]").children()
+        cy.get("[data-cy=dropdown-input]").children()
             .should("have.length", 112)
     })
 }) 
