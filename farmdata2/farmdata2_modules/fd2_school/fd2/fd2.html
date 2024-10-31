@@ -157,25 +157,21 @@
           harvestReportRows() {
             let tableRows = [];
             for (let log of this.harvestLogs) {
-              let areaName = log.area.length > 0 ? log.area[0].name : "Unknown";
-              let harvestQuantity = log.quantity.find(
-                (q) => q.label === "Harvest"
-              );
-              let yieldValue = harvestQuantity ? harvestQuantity.value : "N/A";
-              let units = harvestQuantity ? harvestQuantity.unit.name : "N/A";
-              let cropName = log.name.split(" ")[1];
-
+              let cropName = log.crop || log.name.split(" ")[1]; // Extract crop name from log
               let tableRow = {
                 date: new Date(log.timestamp * 1000).toLocaleDateString(),
-                area: areaName,
+                area: log.area.length > 0 ? log.area[0].name : "Unknown",
                 crop: cropName,
-                yield: yieldValue,
-                units: units,
+                yield:
+                  log.quantity.find((q) => q.label === "Harvest")?.value ||
+                  "N/A",
+                units:
+                  log.quantity.find((q) => q.label === "Harvest")?.unit.name ||
+                  "N/A",
               };
 
               if (
-                this.selectedCrop === "" ||
-                this.selectedCrop === "All Crops" ||
+                this.selectedCrop === "All" ||
                 this.selectedCrop === cropName
               ) {
                 tableRows.push(tableRow);
