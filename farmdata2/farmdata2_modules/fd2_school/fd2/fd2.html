@@ -98,7 +98,6 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/dayjs/dayjs.min.js"></script>
     <script>
-      // Main Vue instance
       var app = new Vue({
         el: "#fd2",
         components: {
@@ -109,7 +108,7 @@
           reportTitle: "My Sample Harvest Report",
           reportStartDate: "2020-05-05",
           reportEndDate: "2020-05-15",
-          reportCrop: "All",  // Default crop selection
+          reportCrop: "All", 
           reportArea: "All",
           areas: ["GHANA-1", "GHANA-2", "GHANA-3", "GHANA-4"],
           harvestLogs: [],
@@ -138,18 +137,16 @@
         },
         computed: {
           cropNames() {
-            // Returns a sorted list of crop names
             return Array.from(this.idToCropMap.values()).sort();
           },
           harvestTableRows() {
-            // Processes and filters harvest logs based on crop and area selections
             return this.harvestLogs
               .map((log) => {
                 try {
                   return {
-                    id: log.id, // Unique ID for each row
+                    id: log.id, 
                     data: [
-                      log.id,  // Include id as the first entry in data array
+                      log.id,  
                       dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
                       log.area[0].name,
                       this.idToCropMap.get(log.data.crop_tid),
@@ -203,7 +200,6 @@
         }
       });
 
-      // Enables Vue devtools
       Vue.config.devtools = true;
     </script>
   </body>
