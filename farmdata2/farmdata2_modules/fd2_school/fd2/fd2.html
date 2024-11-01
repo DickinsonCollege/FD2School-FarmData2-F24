@@ -60,26 +60,20 @@
             <li><strong>End:</strong> {{ end }}</li>
             <li><strong>Crop:</strong> {{ crop }}</li>
         </ul>
+        
 
-        <table border="1">
-            <tr v-if="harvestReportRows.length > 0">
-                <th>Row</th>
-                <th>Date</th>
-                <th>Area</th>
-                <th>Crop</th>
-                <th>Yield</th>
-                <th>Units</th>
-            </tr>
-            <tr v-for="(log, index) in harvestReportRows" :key="index">
-                <td>{{ index + 1 }}</td>
-                <td>{{ log.date }}</td>
-                <td>{{ log.area }}</td>
-                <td>{{ log.cr }}</td>
-                <td>{{ log.yield }}</td>
-                <td>{{ log.units }}</td>
-            </tr>
-        </table>
-        <p v-if="harvestReportRows.length === 0">No report to display</p>
+        <div>
+          <p v-if="harvestReportRows.length === 0">No report to display</p>
+          <custom-table
+            v-else
+            data-cy = "harvest-table"
+            :columns = 'tableColumns'
+            :rows = 'tableRows'
+            >
+          </custom-table>
+        </div>
+
+        
     </div>
 
     <script>
@@ -97,6 +91,13 @@
                 areas: ["Chuau-1", "All", "SQ7"],
                 allPagesArr: [],
                 idToCropMap: new Map(),
+                columns: [
+                  {"header": 'Date', "visible": true, "inputType" : {'type': 'date'}}, 
+                  {"header": 'Area', "visible": true, "inputType" : {'type': 'no input'}},
+                  {"header": 'Crop', "visible": true, "inputType" : {'type': 'no input'}},  
+                  {"header": 'Yield', "visible": true, "inputType" : {'type': 'no input'}},
+                  {"header": 'Units', "visible": true, "inputType" : {'type': 'no input'}}
+                ],
             },
             created() {
                 getIDToCropMap()
@@ -109,15 +110,20 @@
                     });
             },
             components: {
-                'dropdown-with-all': DropdownWithAllComponent
+                'dropdown-with-all': DropdownWithAllComponent,
+                'custom-table': CustomTableComponent,
             },
             computed: {
+                tableColumns(){
+                  return this.columns;
+                },
                 cropNames() {
                     return Array.from(this.idToCropMap.values()); // Convert to array
                 },
                 harvestReportRows() {
                     return this.allPagesArr
                         .map(log => ({
+                            id: log.id,
                             date: dayjs.unix(log.timestamp).format('MM/DD/YYYY'),
                             area: log.area[0].name,
                             yield: log.quantity[0].value,
@@ -130,6 +136,7 @@
                     let tableRows = []
                     for(let log of this.allPagesArr) {
                       let tableRow = {
+                        id : log.id,
                         date: dayjs.unix(log.timestamp).format('MM/DD/YYYY'),
                         area: log.area[0].name,
                         yield: log.quantity[0].value,
@@ -144,6 +151,28 @@
                     return tableRows
                 },  
 
+                tableRows(){
+                    let tableRows = []
+                    for(let log of this.allPagesArr) {
+                        
+                        let tableRow = {
+                            id: log.id,
+                            data:[
+                                dayjs.unix(log.timestamp).format('MM/DD/YYYY'),
+                                log.area[0].name,
+                                this.idToCropMap.get(log.data.crop_tid),
+                                log.quantity[0].value,
+                                log.quantity[0].unit.name,
+                                
+                            ]
+                        
+                        }
+                        if(log.cr == this.crop || this.crop == 'All') {
+                            tableRows.push(tableRow);
+                        }
+                    }
+                    return tableRows;
+                }
             },
             methods: {
                 onCropChange(newCrop) {
