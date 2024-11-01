@@ -5,7 +5,8 @@ describe("Check contents of harvest report table", () => {
   })
     
   it("Contents of Harvest Report Table", () => {
-    cy.get("[data-cy=page-header]").should("have.text","Harvest Report")
+    cy.get('[data-cy = generate-report-button]').click()
+    cy.get("[data-cy=table-headers]").children().should("have.length", 5)
   })
 
 })
