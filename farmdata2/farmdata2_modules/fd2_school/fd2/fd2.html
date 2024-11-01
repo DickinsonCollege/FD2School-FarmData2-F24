@@ -89,7 +89,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="log in harvestReportRows">
+          <tr v-for="log in harvestReportRows" :key="log.date + log.area + log.crop">
             <td>{{ log.date }}</td>
             <td>{{ log.area }}</td>
             <td>{{ log.crop }}</td>
@@ -136,29 +136,33 @@
           cropNames() {
             return Array.from(this.idToCropMap.values()).sort();
           },
+
           harvestReportRows() {
-            let tableRows = [];
-            for(let log of this.harvestLogs) {
+          return this.harvestLogs
+            .map((log) => {
               try {
-                let tableRow = {
+                return {
                   date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
                   area: log.area[0].name,
                   crop: this.idToCropMap.get(log.data.crop_tid),
                   yield: log.quantity[0].value,
                   units: log.quantity[0].unit.name,
                 };
-                if (this.reportCrop === "All" || tableRow.crop === this.reportCrop) {
-                  if (this.reportArea === "All" || tableRow.area === this.reportArea) {
-                    tableRows.push(tableRow);
-                  }
+                } catch (error) {
+                  console.error("Error processing log:", error);
+                  return null;
                 }
-              } catch (error) {
-                console.error("Error processing log:", error);
-              }
+              })
+              .filter((tableRow) => {
+                if (!tableRow) return false;
+
+                const cropMatch = this.reportCrop === "All" || tableRow.crop === this.reportCrop;
+                const areaMatch = this.reportArea === "All" || tableRow.area === this.reportArea;
+
+                return cropMatch && areaMatch;
+              });
             }
-            return tableRows;
-          }
-        },
+      },
         methods: {
           cropChange(newCrop) {
             this.reportCrop = newCrop;
