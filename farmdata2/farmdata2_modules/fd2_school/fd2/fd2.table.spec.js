@@ -1,5 +1,6 @@
 describe("Harvest Report Table Tests", () => {
   beforeEach(() => {
+    cy.login("manager1", "farmdata2");
     cy.visit("/farm/fd2-school/fd2"); // Update with the actual path for your FD2 sub-tab
   });
 
@@ -9,20 +10,21 @@ describe("Harvest Report Table Tests", () => {
 
   it("should display the correct table headers", () => {
     // Click the Generate Report button
-    cy.get("[data-cy=generate-report-button").click();
+    cy.get("[data-cy=generate-report-button]").click();
 
     // Check each header
-    cy.get("[data-cy=h0").should("have.text", "Row");
-    cy.get("[data-cy=h1").should("have.text", "Date");
-    cy.get(["data-cy=h2"]).should("have.text", "Area");
-    cy.get(["data-cy=h3"]).should("have.text", "Crop");
-    cy.get("data-cy=h4").should("have.text", "Yield");
-    cy.get("data-cy=h5").should("have.text", "Edit");
-    cy.get("[data-cy=h7").should("have.text", "Delete");
+    cy.get("[data-cy=h0]").should("have.text", "Row");
+    cy.get("[data-cy=h1]").should("have.text", "Date");
+    cy.get("[data-cy=h2]").should("have.text", "Area");
+    cy.get("[data-cy=h3]").should("have.text", "Crop");
+    cy.get("[data-cy=h4]").should("have.text", "Yield");
+    cy.get("[data-cy=h5]").should("have.text", "Units");
+    cy.get("[data-cy=h6]").should("have.text", "Edit");
+    cy.get("[data-cy=h7]").should("have.text", "Delete");
   });
 
   it("should have the correct number of columns", () => {
-    // Click the Generate Report button to make teh table appear
+    // Click the Generate Report button to make the table appear
     cy.get("[data-cy=generate-report-button]").click();
 
     // Verify the number of columns in the header row
@@ -42,7 +44,14 @@ describe("Harvest Report Table Tests", () => {
 
     // Verify each row has "ASPARAGUS" in the crop column
     cy.get("[data-cy=harvest-table] tbody tr").each((row) => {
-      cy.wrap(row).find("td").eq(3).should("have.text", cropToSelect); // Crop column index may vary
+      // Trim whitespace to handle extra spaces
+      cy.wrap(row)
+        .find("td")
+        .eq(3)
+        .invoke("text")
+        .then((text) => {
+          expect(text.trim()).to.equal(cropToSelect);
+        });
     });
   });
 });
