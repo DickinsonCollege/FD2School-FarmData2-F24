@@ -20,21 +20,16 @@ describe('FD2 Harvest Report Table', () => {
     });
 
     it('should filter rows by selected crop', () => {
-      // Step 1: Generate the report using the default date range
       cy.get("[data-cy=generate-report-button]").click();
 
-      // Step 2: Select a crop from the dropdown
-      const selectedCrop = "Wheat"; // Replace with a crop that exists in the report data
+      const selectedCrop = "Wheat"; 
 
-      // Open the dropdown and select the crop
       cy.get("[data-cy=crop-dropdown] > select").select(selectedCrop);
 
-      // Step 3: Verify the filtered table has the correct number of rows
       cy.get("[data-cy=harvest-report-table-body]").within(() => {
         cy.get("tr").then((rows) => {
           const rowCount = rows.length;
 
-          // Step 4: Check each row to ensure it only contains the selected crop
           for (let i = 0; i < rowCount; i++) {
             cy.get(`[data-cy=row${i}-col3]`).should("have.text", selectedCrop);
           }
