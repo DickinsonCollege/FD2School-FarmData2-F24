@@ -17,4 +17,19 @@ describe("Harvest Report Table Tests", () => {
         cy.get('[data-cy=table-headers]').children('th').should('have.length', 7);
     });
 
+    it("test filtering by crop", () => {
+        const selectedCrop = "ASPARAGUS";
+        cy.get("[data-cy=crop-names] > [data-cy=dropdown-input]").select(selectedCrop);
+        cy.get("[data-cy=generate-report]").click();
+
+        cy.get("[data-cy=table-body]").children().should("have.length", 5);
+    
+    
+        // Step 4: Verify that each row has the selected crop name
+        cy.get("[data-cy=table-body]").children().each(row => {
+            cy.wrap(row).find("td").eq(4).invoke("text").then((text) => {expect(text.trim()).to.equal(selectedCrop);
+            });
+        });
+      });
+
 });
