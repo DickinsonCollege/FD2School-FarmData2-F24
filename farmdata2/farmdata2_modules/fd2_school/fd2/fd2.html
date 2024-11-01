@@ -57,26 +57,11 @@
                 <li><strong>End:</strong>{{ rptEndDate }}</li>
                 <li><strong>Crop:</strong>{{ rptCrop }}</li>
             </ul>
-
-            <table border=1>
-                <tr v-if="harvestReportRows.length > 0">
-                    <th>Row</th>
-                    <th>Date</th>
-                    <th>Area</th>
-                    <th>Crop</th>
-                    <th>Yield</th>
-                    <th>Units</th>
-                </tr>
-                <tr v-for="(log, index) in harvestReportRows">
-                    <td>{{ index+1 }}</td>
-                    <td>{{ log.date }}</td>
-                    <td>{{ log.area }}</td>
-                    <td>{{ log.crop }}</td>
-                    <td>{{ log.yield }}</td>
-                    <td>{{ log.units }}</td>
-                </tr>
-                
-            </table>
+            <custom-table data-cy="test-table"
+                :columns="columns"
+                :rows="tableRows" 
+                >
+            </custom-table>
         </div>
     </div>
     <script>
@@ -84,6 +69,7 @@
             el: '#harvest-report',
             components: {
                 'dropdown-with-all': DropdownWithAllComponent,
+                'custom-table': CustomTableComponent,
             },
             data: {
                 rptTitle: 'Harvest Report',
@@ -99,6 +85,16 @@
                 idToCropMap: new Map(),
                 idToAreaMap: new Map(),
                 harvestPages: [],
+                columns: [
+                    {"header": 'Row', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Date', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Area', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Crop', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Yield', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Units', "visible": true, "inputType": {'type': 'no input'}},
+                ],
+                tableData: [],
+
             },
             computed: {
                 cropNames() {
@@ -107,17 +103,24 @@
                 areaNames() {
                     return Array.from(this.idToAreaMap.values())
                 },
-                harvestReportRows() {
+                tableRows() {
                     let tableRows = []
+                    let i = 1
                     for(let log of this.harvestPages) {
                         if (this.idToCropMap.get(log.data.crop_tid) === this.rptCrop || this.rptCrop === "All") {
                             let tableRow = {
-                                date: dayjs.unix(log.timestamp).format('MM-DD-YYYY'),
-                                area: log.area[0].name,
-                                yield: log.quantity[0].value,
-                                units: log.quantity[0].unit.name,
-                                crop: this.idToCropMap.get(log.data.crop_tid),
+                                id : log.data.crop_tid,
+                                data: [
+                                    i,
+                                    dayjs.unix(log.timestamp).format('MM-DD-YYYY'),
+                                    log.area[0].name,
+                                    this.idToCropMap.get(log.data.crop_tid),
+                                    log.quantity[0].value,
+                                    log.quantity[0].unit.name,
+                                ]
+                                
                             }
+                            i += 1
                             tableRows.push(tableRow)
                         }
                     }
