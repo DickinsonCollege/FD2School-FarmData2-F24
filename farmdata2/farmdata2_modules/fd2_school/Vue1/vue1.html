@@ -1,0 +1,132 @@
+<html>
+  <body>
+    <h1>Harvest Report</h1>
+    <div id="vue-app" v-cloak>
+      <!-- Title input and binding -->
+      <div>
+        <label for="title">Title:</label>
+        <input type="text" v-model="reportTitle" placeholder="Enter report title">
+      </div>
+      <h1>{{ reportTitle.trim() === '' ? 'Mock Harvest Report' : reportTitle}}</h1>
+
+      <!-- Start Date input and binding -->
+      <div>
+        <label for="start-date">Start:</label>
+        <input type="date" v-model="reportStartDate" min="2014-01-01" max="2022-01-01">
+      </div>
+
+      <!-- End Date input and binding -->
+      <div>
+        <label for="end-date">End:</label>
+        <input type="date" v-model="reportEndDate" min="2020-05-05" max="2022-01-01">
+      </div>
+
+      <!-- Crop selection input and binding -->
+      <div>
+        <label for="crop">Crop:</label>
+        <select v-model="reportCrop">
+          <option v-for="crop in crops" :key="crop">{{ crop }}</option>
+        </select>
+      </div>
+
+      <!-- Area selection input and binding -->
+      <div>
+        <label for="area">Area:</label>
+        <select v-model="reportArea">
+          <option v-for="area in areas" :key="area">{{ area }}</option>
+        </select>
+      </div>
+
+      <!-- Harvest Logs Table -->
+      <h3>Harvest Logs</h3>
+      <table border="1">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Area</th>
+            <th>Crop/Yield</th>
+            <th>Units</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- v-for to dynamically generate table rows -->
+          <tr v-for="log in harvestLogs" :key="log.date + log.area + log.crop">
+            <td>{{ log.date }}</td>
+            <td>{{ log.area }}</td>
+            <td>{{ log.crop }} {{ log.yield }}</td>
+            <td>{{ log.units }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Names List -->
+      <div>
+        <h2>Names List</h2>
+        <ul>
+          <li v-for="name in names" :key="name">{{ name }}</li>
+        </ul>
+      </div>
+
+      <!-- Cards List -->
+      <div>
+        <h3>Cards List</h3>
+        <ul>
+          <li v-for="c in cards" :key="c.suit + c.rank">{{ c.rank }} of {{ c.suit }}</li>
+        </ul>
+      </div>
+       <div>
+       <label for="new-field">Name:</label>
+       <input type="text" v-model="newField" @keyup.enter="addName" placeholder="">
+       <button @click="addName">Add Name</button>
+      </div>
+    </div>
+    
+
+    <script src="https://unpkg.com/vue@2"></script>
+    
+    <!-- Vue instance -->
+    <script>
+      var app = new Vue({
+        el: "#vue-app",
+        
+        data: {
+          reportTitle: "My Sample Harvest Report", // Default title
+          reportStartDate: '2020-05-05', // Default start date
+          reportEndDate: '2020-05-15', // Default end date
+          reportCrop: '', // Default crop
+          reportArea: '', // Default area
+          names: ["Joe", "Arun", "Ouwen", "Anh", "Sue","Ifrad"], // Names array
+          crops: ["Broccoli", "Kale", "Peas"], // Crop options as an array
+          areas: ["All", "Chuau-1", "SQ7"], // Area options as an array
+          cards: [ // Cards array
+            { suit: "H", rank: "3" },
+            { suit: "S", rank: "K" },
+            { suit: "D", rank: "7" }
+          ],
+          // Harvest logs array
+          harvestLogs: [
+            { date: "2018-05-02", area: "Chuau-1", crop: "Kale", yield: 10, units: "Bunches" },
+            { date: "2018-05-05", area: "SQ7", crop: "Broccoli", yield: 15, units: "Pounds" }
+          ],
+          newField:""
+        },
+        methods: {
+          addName() {
+            const trimmedName = this.newField.trim(); // Trim the input value
+            if (trimmedName) { // Check if it's not empty after trimming
+              this.names.push(trimmedName); // Add name to the list
+              this.newField = ''; // Clear the input field after adding
+            }
+          }
+        }
+      });
+        
+      
+      Vue.config.devtools = true;
+    </script>
+  </body>
+</html>
+
+  
+    
+  
