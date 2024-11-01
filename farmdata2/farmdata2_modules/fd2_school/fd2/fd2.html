@@ -36,11 +36,11 @@
         <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate" data-cy="end-date">
 
 
-        <h3>Selected Crop: {{ selectedCrop }}</h3>
+        <h3 data-cy="picked-crop">Selected Crop: {{ selectedCrop }}</h3>
 
         <label for="crop">Select Crop:</label>
         <dropdown-with-all 
-            data-cy="crop-select" 
+            data-cy="crop-dropdown"
             includes-all 
             :selected-val='selectedCrop'
             :dropdown-list='cropNames'
@@ -49,7 +49,6 @@
         </dropdown-with-all>
         
         <h3>Selected Area: {{ selectedArea }}</h3>
-
         <label for="area">Select Area</label>
         <select id="area" v-model="selectedArea">
             <option value="">All</option>
@@ -62,55 +61,33 @@
 
         <li v-if="reportGenerated" data-cy="farm-name"><strong>Farm:</strong> {{ farmName }}</li>
         <li v-if="reportGenerated" data-cy="user-name"><strong>User:</strong> {{ userName }}</li>
-        
         <span v-if="reportGenerated" data-cy="language">{{ language }}</span>
        
 
         <h2 data-cy="report-header" v-if="reportGenerated">{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
         
-        <h2>Harvest Logs</h2>
-        <div v-if="harvestReportRows.length > 0">
-            <table>
-                <thead>
-                    <tr>
-                        <th> Row </th>
-                        <th> Date </th>
-                        <th> Crop </th>
-                        <th> Area </th>
-                        <th> Yield </th>
-                        <th> Units </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(row,index) in harvestReportRows" :key="index">
-    
-                        <td> {{ index+1 }} </td>
-                        <td> {{ row.date }}</td>
-                        <td> {{ row.crop }}</td>
-                        <td> {{ row.area }}</td>
-                        <td> {{ row.yield }}</td>
-                        <td> {{ row.units }}</td>
-                    </tr>
-                </tbody>
-    
-            </table>
-            
-
-
-        </div>
-        <div v-else>
-            <p>There are no matching records found</p>
-        </div>
+       
+        <custom-table 
+            data-cy="test-table"
+            can-edit
+            can-delete
+            csv-name="UI_example_"
+            :columns="columns"
+            :rows="tableData" 
+            ></custom-table>
         
+        <div v-if="harvestReportRows ==0">
+            <p>There are no matching reports</p>
 
+        </div>
     </div>
-    
    
     <script>
         var app= new Vue({
             el: '#vue-app',
             components:{
-                'dropdown-with-all': DropdownWithAllComponent
+                'dropdown-with-all': DropdownWithAllComponent,
+                'custom-table': CustomTableComponent
 
             },
             
@@ -126,7 +103,15 @@
                 allHarvestLogs: [],
                 farmName:"",
                 userName:"",
-                language:""
+                language:"",
+                columns:[
+                    {"header": 'Row', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Date', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Crop', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Area', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Yield', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Units', "visible": true, "inputType": {'type': 'no input'}},
+                ]
             },
             created(){
                 getIDToCropMap()
@@ -148,6 +133,7 @@
               
             },
             computed:{
+                
                 cropNames(){
                     return this.transformMapToArray(this.idToCropMap);
                 },
@@ -165,8 +151,9 @@
 
 
                         //for the double all scenario. Just show all harvest reports
-                        if(this.selectedCrop == "All" && this.selectedArea==""){
+                        if(this.selectedCrop == "All" ||cropName == this.selectedCrop){
                             let tableRow = {
+                                id:log.id,
 			                    date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
                                 crop: cropName,
                                 area: areaName,
@@ -224,12 +211,34 @@
 		                
 	                }
 	                return tableRows;
-                }
+                },
+                tableData(){
+                    return this.harvestReportRows.map((log,index)=>({
+                        id: log.id,
+                        row: index+1,
+                        date: dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                        //crop: cropName,
+                        //area: areaName,
+                        yield: log.quantity[0].value, 
+                        units: log.quantity[0].unit.name
+
+                    })
+                    
+                    
+                    
+                    )
+
+
+                },
             },
 
                 
             
             methods: {
+                cropChange(newCrop){
+                    this.selectedCrop=newCrop
+                    console.log("Selected Crop:", this.selectedCrop);
+                },
                 generateReport: function(){
                     this.reportGenerated = true;
                     
@@ -267,9 +276,7 @@
                 
                     
                 },
-                cropChange(newCrop){
-                    this.selectedCrop=newCrop
-                },
+                
                 transformMapToArray(map){
                     return [...map.values()];
                 }
