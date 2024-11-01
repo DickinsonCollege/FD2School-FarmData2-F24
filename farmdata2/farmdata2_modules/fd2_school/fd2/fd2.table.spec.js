@@ -15,4 +15,13 @@ describe("Test the table created when generating a report", () => {
         cy.get("[data-cy=table-headers]").children().should("have.length", 6)
     })
 
+    it("Checks that the table properly filters based on the crop selected", () => {
+        cy.get("[data-cy=crop-selector] > [data-cy=dropdown-input]").select('BOKCHOY')
+        cy.get("[data-cy=generate-report-button]").click()
+        cy.get("[data-cy=table-body]").children().should("have.length", 3)
+        cy.get("[data-cy=r0-Crop]").should("have.text", "BOKCHOY")
+        cy.get("[data-cy=r1-Crop]").should("have.text", "BOKCHOY")
+        cy.get("[data-cy=r2-Crop]").should("have.text", "BOKCHOY")
+    })
+
 }) 
