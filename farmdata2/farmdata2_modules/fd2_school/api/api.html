@@ -1,0 +1,142 @@
+<html>
+    <h1>Harvest Report</h1>
+    <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
+
+    <div id="harvest-report" v-cloak>
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" v-model="rptTitle">
+
+        <br><br>
+        
+        <label for="start">Start:</label>
+        <input type="date" id="start" :min="2014-01-01" :max="rptEnd" v-model="rptStart">
+
+        <label for="end">End:</label>
+        <input type="date" id="end" :min="rptStart" :max="2022-01-01" v-model="rptEnd">
+
+        <br><br>
+        
+        <label for="crop">Crop:</label>
+        <select id="crop" name="crop" v-model="rptCrop">
+            <option v-for="crop in cropNames">{{crop}}</option>
+        </select>
+
+        <label for="area">Area:</label>
+        <select id="area" name="area">
+            <option v-for="area in areaNames">{{area}}</option>
+        </select>
+
+        <br><br>
+        
+        <button type="submit" @click="generateReport">Generate Report </button>
+
+        <hr>
+
+        <h1>{{rptTitle ? rptTitle : "Mock Harvest Report"}}</h1>  
+
+        <p>Details</p>
+        <ul>
+           <li> <strong>Farm:</strong>{{farm}} </li>
+          <li> <strong>User:</strong>{{user}} </li>
+           <li> <strong>Language:</strong>{{language}} </li>
+        </ul>
+
+        <ul>
+            <li> <strong>Start:</strong>{{rptStart}} </li>
+            <li> <strong>End:</strong>{{rptEnd}} </li>
+            <li> <strong>Crop:</strong>{{rptCrop}} </li>
+        </ul>
+
+        <div v-if="rptHarvestLogs.length > 0">
+            <table border="1">
+                <tr>
+                  <th>Row</th>
+                  <th>Date</th>
+                   <th>Area</th>
+                    <th>Crop</th>
+                   <th>Yield</th>
+                   <th>Units</th>
+                </tr>
+                <tr v-for="(log, index) in rptHarvestLogs" :key="index">
+                    <td>{{index+1}}</td>
+                    <td>{{log.date}}</td>
+                    <td>{{log.area}}</td>
+                    <td>{{log.crop}}</td>
+                    <td>{{log.yield}}</td>
+                    <td>{{log.units}}</td>
+                </tr>
+            </table>
+        </div>
+        <p v-else> No Matching Records</p>
+
+    </div>
+
+    <script>
+        var harvestReport = new Vue({
+            el:"#harvest-report",
+            created() {
+                getIDToCropMap().then((theMap) => {
+                    this.idToCropMap= theMap;
+                    console.log("got the idToCropMap");
+                }).catch((err) => {
+                    console.log("failed to get the idToCropMap");
+                });
+
+                getIDToAreaMap().then((theMap) =>{
+                    this.idToAreaMap= theMap;
+                    console.log("got the idToAreaMap");
+                }).catch((err) => {
+                    console.log("failed to get the idToAreaMap");
+                });
+            },
+            computed:{
+                cropNames(){
+                    return Array.from(this.idToCropMap.values());
+                },
+                areaNames(){
+                    return Array.from(this.idToAreaMap.values());
+                },
+            },
+            data:{
+                farm:"",
+                user:"",
+                language:"",
+                rptTitle:"My Sample Harvest Report",
+                rptStart:"2020-05-05",
+                rptEnd:"2020-05-15",
+                rptCrop:"kale",
+                rptCropList: [ "Broccoli", "kale", "Peas"],
+                rptAreaList: [ "all", "Chuau-1", "SQ7"],
+                rptHarvestLogs: [],
+                idToCropMap: new Map(),
+                idToAreaMap: new Map(),
+            },
+            methods:{
+                generateReport: function(){
+
+                    axios.get("/farm.json").then((response) => {
+                            console.log("Got Response")
+                            console.log(response)
+                        })
+                        .catch((error) => {
+                            console.log("Error Occurred")
+                            console.log(error)
+                        })
+
+                    this.farm="Sample Farm",
+                    this.user="manager1"
+                    this.language="English"
+                    this.rptHarvestLogs.push({
+                            date:'2018-05-01',
+                            area:'Orion-3',
+                            crop:'Kale',
+                            yield:12,
+                            units:'Bunches',
+                            });
+                },
+            },
+        });
+        Vue.config.devtools = true;
+    </script>
+
+</html>
