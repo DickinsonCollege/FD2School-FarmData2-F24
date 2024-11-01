@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en-US">
+  <h1>Harvest Report </h1>
+    <p> This page is a <i>mockup</i> of a simplified harvest report. </p>
+    <label for="textField">Title: </label>
+
+    <div id="my-sample" v-cloak>
+      <div>
+        <input type="text" v-model="header"/>
+  
+      </div>
+    <br>
+
+    <div > 
+      <label for="startDate">Start: </label>
+      <input type="date" id="startDate" min="2014-01-01" max="2022-01-01" v-model="start">
+      <label for="endDate">End: </label>
+      <input type="date" id="endDate" :min="start" max="2022-01-01" v-model="end">
+      <br> 
+
+
+      <label for="cropDropdown">Crop: </label>
+    <select id="cropDropDown" name="Crop" v-model="crop">
+      <option v-for = "item in cropNames">{{item}}</option>
+    </select>
+
+
+    <label for="fieldDropDown">Area: </label>
+    <select id="fieldDropDown" name="Field" v-model="field">
+      <option v-for="area in areas">{{area}}</option>
+    </select>
+    </div> 
+    
+    
+    <br>
+    <div class="generate-report">
+      <button class="btn btn-primary" @click="generate">Generate Report</button>
+    </div>
+
+    <hr />
+
+    <div>
+      <h1>{{ header ? header : "Mock Harvest Report" }}</h1>
+    </div>
+  
+    
+
+    
+    <p> Details </p>
+    <ul>
+      <li><strong>Farm:</strong>{{farm}}</li>
+      <li><strong>User:</strong>{{user}}</li>
+      <li><strong>Language:</strong>{{language}}</li>
+      <br>
+      <li><strong>Start:</strong>{{start}}</li>
+      <li><strong>End:</strong>{{end}}</li>
+      <li><strong>Crop:</strong>{{crop}}</li>
+    </ul>
+    
+    <table border=1>
+      <tr v-if="allPagesArr.length > 0">
+        <th>Row</th>
+        <th>Date</th>
+        <th>Area</th>
+        <th>Crop</th>
+        <th>Yield</th>
+        <th>Units</th>
+      </tr>
+      
+      <tr v-for="(log,index) in harvestReportRows" >
+        <td>{{index + 1}}</td>
+        <td>{{log.date}}</td>
+        <td >{{log.area}}</td>
+        <td >{{log.cr}}</td>
+        <td>{{log.yield}}</td>
+        <td>{{log.units}}</td>
+      </tr>
+    </table>
+    <p v-if = "logs.length === 0">No report to display</p>
+    
+</div>
+
+
+<script>
+  var mySample = new Vue({
+    el: "#my-sample",
+    created() {
+      getIDToCropMap()
+	    .then((theMap) => {
+        // Process the map.
+        // Typically it is stored in the Vue data for later use.
+        this.idToCropMap = theMap;
+        console.log("Successfully get the tid Map")
+      })
+      .catch((err) => {
+        // An error occurred during the request, process it here.
+        console.log("Fail to get the tid Map")
+      })
+        // Execution continues here immediately after the request is made.
+        // Note that the Map will not be available until the then() executes.
+
+    },
+    data: {
+      header: "My Sample Harvest Report",
+      start: "2020-05-05",
+      end: "2021-02-02",
+      crop:'Kale',
+      crops:[],
+      farm: '',
+      user: '',
+      language: '',
+      field : "All",
+      areas : ["Chuau-1", "All", "SQ7"],
+      logs:[],
+      idToCropMap: new Map(),
+      allPagesArr: [],
+    },
+    computed:{
+      cropNames() {
+        cropVals = this.idToCropMap.values();
+        return cropVals;
+      },
+
+      harvestReportRows() {
+        let tableRows = []
+        for(let log of this.allPagesArr) {
+          let tableRow = {
+            date: dayjs.unix(log.timestamp).format('MM/DD/YYYY'),
+            area: log.area[0].name,
+            yield: log.quantity[0].value,
+            units: log.quantity[0].unit.name,
+            cr: this.idToCropMap.get(log.data.crop_tid),
+          }
+            if(tableRow.cr == this.crop) {
+              tableRows.push(tableRow)
+            }
+        }
+        return tableRows
+      },
+
+    },
+    methods:{
+      generate: function(){
+        axios.get('/farm.json')  // this line sends the request.
+        .then((response) => {
+            // Block A:
+            // Code here executes when the response is received.
+            // response is an Object created from the “Response Body” JSON.
+            this.farm = response.data.name;
+            this.user = response.data.user.name;
+            this.language = response.data.user.language;  
+
+          })
+          .catch((error) => {
+            // Block B: 
+            // Code here executes if an error occurs processing the request.
+            // error is an Object describing the error that occurred.
+
+          })
+          // Block C: 
+            // Code here runs immediately after the request is sent,
+            // which will be before the code in then() or catch(),
+            // and before the response is received.
+          let startTimestamp = dayjs(this.start).unix();
+          let endTimestamp = dayjs(this.end).unix();
+          let request = "/log.json?type=farm_harvest&timestamp[ge]="+ startTimestamp + "&timestamp[le]=" + endTimestamp;          getAllPages(request, this.allPagesArr)
+          .then(() => {
+              // All of the requested records have now been added to result.
+              // Additional processing can happen here if necessary,
+              // or then may be omitted.
+              console.log("successful")
+          })
+          .catch((err) => {
+              // An error occurred during the requests, process it here.
+              console.log("Fail")
+          })
+          // Execution continues here immediately after the request is made.
+          // Result will not yet contain records but will be filled as responses are received.
+          // The result will contain all records when then() is invoked.
+        }
+      },
+  });
+
+  Vue.config.devtools = true;
+</script>
+</html>
