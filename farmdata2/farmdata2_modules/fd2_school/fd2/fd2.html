@@ -5,6 +5,7 @@
     <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
     <hr>
     
+    <!-- Main Vue app container -->
     <div id="fd2" v-cloak>
       <h1 data-cy="report-title">{{ reportTitle.trim() === '' ? 'Mock Harvest Report' : reportTitle }}</h1>
       <p>Details:</p>
@@ -14,9 +15,10 @@
         <li><strong>Language:</strong> <span data-cy="language">{{ language }}</span></li>
         <li><strong>Start:</strong> {{ reportStartDate }}</li>
         <li><strong>End:</strong> {{ reportEndDate }}</li>
-        <li><strong>Crop:</strong> {{ reportCrop }}</li> 
+        <li><strong>Crop:</strong> {{ reportCrop }}</li>
       </ul>
 
+      <!-- Report title input -->
       <div>
         <label for="title">Title:</label>
         <input type="text" id="title" v-model="reportTitle" placeholder="My Sample Harvest Report">
@@ -24,6 +26,7 @@
 
       <br>
 
+      <!-- Crop dropdown selection -->
       <div>
         <label>Crop:</label>
         <dropdown-with-all 
@@ -31,12 +34,13 @@
             includes-all
             :selected-val="reportCrop"
             :dropdown-list="cropNames"
-            @selection-changed="cropChange"> 
+            @selection-changed="cropChange">
         </dropdown-with-all>
       </div>
 
       <br>
 
+      <!-- Area selection dropdown -->
       <div>
         <label for="areaSelect">Area:</label>
         <select id="areaSelect" v-model="reportArea">
@@ -47,6 +51,7 @@
 
       <br>
 
+      <!-- Start date input -->
       <div>
         <label for="startDate">Start Date:</label>
         <input type="date" 
@@ -60,6 +65,7 @@
 
       <br>
 
+      <!-- End date input -->
       <div>
         <label for="endDate">End Date:</label>
         <input type="date" 
@@ -73,60 +79,58 @@
 
       <br>
 
+      <!-- Generate report button -->
       <button data-cy="generate-report-button" @click="generateReport">Generate Report</button>
 
-      <div v-if="harvestLogs.length === 0">
-        No matching records found.
-      </div>
-      <table v-else border="1">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Area</th>
-            <th>Crop</th>
-            <th>Yield</th>
-            <th>Units</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="log in harvestReportRows" :key="log.date + log.area + log.crop">
-            <td>{{ log.date }}</td>
-            <td>{{ log.area }}</td>
-            <td>{{ log.crop }}</td>
-            <td>{{ log.yield }}</td>
-            <td>{{ log.units }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <!-- Custom Table Component for displaying harvest logs -->
+      <custom-table
+        data-cy="harvest-report-table"
+        :columns="columns"
+        :rows="harvestTableRows"
+        can-edit="false"
+        can-delete="false"
+        csv-name="Harvest_Report">
+      </custom-table>
     </div>
 
+    <!-- Vue and dependencies -->
     <script src="https://unpkg.com/vue@2"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/dayjs/dayjs.min.js"></script>
     <script>
+      // Main Vue instance
       var app = new Vue({
         el: "#fd2",
         components: {
           'dropdown-with-all': DropdownWithAllComponent,
+          'custom-table': CustomTableComponent,
         },
         data: {
           reportTitle: "My Sample Harvest Report",
           reportStartDate: "2020-05-05",
           reportEndDate: "2020-05-15",
-          reportCrop: "All", 
+          reportCrop: "All",  // Default crop selection
           reportArea: "All",
           areas: ["GHANA-1", "GHANA-2", "GHANA-3", "GHANA-4"],
           harvestLogs: [],
           farm: "",
           user: "",
           language: "",
-          idToCropMap: new Map()
+          idToCropMap: new Map(),
+          columns: [
+            { header: 'ID', visible: true, inputType: { type: 'no input' } },
+            { header: 'Date', visible: true, inputType: { type: 'no input' } },
+            { header: 'Area', visible: true, inputType: { type: 'no input' } },
+            { header: 'Crop', visible: true, inputType: { type: 'no input' } },
+            { header: 'Yield', visible: true, inputType: { type: 'no input' } },
+            { header: 'Units', visible: true, inputType: { type: 'no input' } }
+          ]
         },
         created() {
           getIDToCropMap()
             .then((theMap) => {
               this.idToCropMap = theMap;
-              console.log("Crops:", Array.from(this.idToCropMap.values()).sort())
+              console.log("Crops:", Array.from(this.idToCropMap.values()).sort());
             })
             .catch((err) => {
               console.log("Error fetching crop map", err);
@@ -134,20 +138,25 @@
         },
         computed: {
           cropNames() {
+            // Returns a sorted list of crop names
             return Array.from(this.idToCropMap.values()).sort();
           },
-
-          harvestReportRows() {
-          return this.harvestLogs
-            .map((log) => {
-              try {
-                return {
-                  date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
-                  area: log.area[0].name,
-                  crop: this.idToCropMap.get(log.data.crop_tid),
-                  yield: log.quantity[0].value,
-                  units: log.quantity[0].unit.name,
-                };
+          harvestTableRows() {
+            // Processes and filters harvest logs based on crop and area selections
+            return this.harvestLogs
+              .map((log) => {
+                try {
+                  return {
+                    id: log.id, // Unique ID for each row
+                    data: [
+                      log.id,  // Include id as the first entry in data array
+                      dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
+                      log.area[0].name,
+                      this.idToCropMap.get(log.data.crop_tid),
+                      log.quantity[0].value,
+                      log.quantity[0].unit.name,
+                    ]
+                  };
                 } catch (error) {
                   console.error("Error processing log:", error);
                   return null;
@@ -155,14 +164,14 @@
               })
               .filter((tableRow) => {
                 if (!tableRow) return false;
-
-                const cropMatch = this.reportCrop === "All" || tableRow.crop === this.reportCrop;
-                const areaMatch = this.reportArea === "All" || tableRow.area === this.reportArea;
+                
+                const cropMatch = this.reportCrop === "All" || tableRow.data[3] === this.reportCrop;
+                const areaMatch = this.reportArea === "All" || tableRow.data[2] === this.reportArea;
 
                 return cropMatch && areaMatch;
               });
-            }
-      },
+          }
+        },
         methods: {
           cropChange(newCrop) {
             this.reportCrop = newCrop;
@@ -194,6 +203,7 @@
         }
       });
 
+      // Enables Vue devtools
       Vue.config.devtools = true;
     </script>
   </body>
