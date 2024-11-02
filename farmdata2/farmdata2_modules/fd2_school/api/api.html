@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>VUE Example</title>
+    <link rel="stylesheet" href="main.css">
+    <style>
+        table{
+            width: 25%;
+            border:1px solid black;
+            
+        }
+        th,td{
+            border: 1px solid black;
+        }
+    </style>
+    
+  </head>
+  <body>
+    <div id="vue-app" v-cloak>
+        <input type="text" v-model="reportTitle" >
+        <h2>{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
+
+        <h3>Start Date: {{ startDate }}</h3>
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date" v-model="startDate" v-bind:max="endDate">
+        
+
+        <h3>End Date: {{ endDate }}</h3>
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate">
+
+        
+
+
+
+        <h3>Selected Crop: {{ selectedCrop }}</h3>
+
+        <label for="crop">Select Crop:</label>
+        <select id="crop" v-model="selectedCrop">
+            <option v-for="crop in cropNames" :key="crop" :value="crop">{{ crop }}</option>
+        </select>
+        
+        <h3>Selected Area: {{ selectedArea }}</h3>
+
+        <label for="area">Select Area</label>
+        <select id="area" v-model="selectedArea">
+            <option v-for="area in areas" :key="area" :value="area">{{ area }}</option>
+        </select>
+
+        <button @click='generateReport'>Generate Report</button>
+
+        <h3>Farm:{{ Farm }}</h3>
+        <label for="farm">Farm Name:</label>
+        <input type="text" id="farm" v-model="Farm">
+
+        <h3>User:{{ User }}</h3>
+        <label for="user">User Name:</label>
+        <input type="text" id="user" v-model="User">
+
+        <h3>Language:{{ Language }}</h3>
+        <label for="language">Language:</label>
+        <input type="text" id="language" v-model="Language">
+
+        <h2>Harvest Logs</h2>
+        <div v-if="harvLogs.length > 0">
+            <table>
+                <thead>
+                    <tr>
+                        <th> Row </th>
+                        <th> Date </th>
+                        <th> Crop </th>
+                        <th> Area </th>
+                        <th> Yield </th>
+                        <th> Units </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="(log,index) in harvLogs" :key="log.date">
+    
+                        <td> {{ index+1 }} </td>
+                        <td> {{ log.date }}</td>
+                        <td> {{ log.crop }}</td>
+                        <td> {{ log.area }}</td>
+                        <td> {{ log.yield }}</td>
+                        <td> {{ log.units }}</td>
+                    </tr>
+                </tbody>
+    
+            </table>
+            
+
+
+        </div>
+        <div v-else>
+            <p>There are no matching records found</p>
+        </div>
+        
+
+    </div>
+    
+   
+    <script>
+        var app= new Vue({
+            el: '#vue-app',
+            
+            data: {
+                reportTitle: 'My Sample Harvest Report',
+                startDate: " ",
+                endDate: " ",
+                selectedCrop:"Wheat",
+                selectedArea: " ",
+                areas: ["Field1","Field2","Orion-3"],
+                harvLogs: [],
+                Farm:" ",
+                User:" ",
+                Language:" ",
+                idToCropMap: new Map()
+            },
+            computed:{
+                cropNames(){
+                    return this.transformMapToArray(this.idToCropMap);
+                }
+                
+            },
+            methods: {
+                generateReport: function(){
+
+                    axios.get('/farm.json')
+                    .then((response)=>{
+                        this.Farm = response.data.name;
+                        this.User = response.data.user.name;
+                        this.Language = response.data.language;
+
+                        this.harvLogs.push({
+                            date: this.startDate,
+                            area: this.selectedArea,
+                            crop: this.selectedCrop,
+                            yield: "12",
+                            units: "Bunches"
+                        });
+
+                    })
+                    .catch((error)=>{
+                        console.log(error);
+
+                    })
+                    //block c
+
+                   
+                    
+                    
+                },
+                transformMapToArray(map){
+                    return [...map.values()];
+                }
+
+
+            },
+            created(){
+                getIDToCropMap()
+                    .then((theMap)=> {
+                        this.idToCropMap = theMap;
+                    })
+                    .catch((error)=>{
+                        console.log("Error getting crop ID to croup name map");
+                        console.log(error);
+                    });
+            },
+            
+        });
+        Vue.config.devtools = true;
+    </script>
+  </body>
+</html>

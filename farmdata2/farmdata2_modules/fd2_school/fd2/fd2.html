@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>VUE Example</title>
+    <link rel="stylesheet" href="main.css">
+    <style>
+        table{
+            width: 25%;
+            border:2px solid black;
+            
+        }
+        th,td{
+            border: 1px solid black;
+        }
+        
+    </style>
+    
+  </head>
+  <body>
+    <div id="vue-app" v-cloak>
+        <h1>Harvest Report</h1>
+
+        
+        <input type="text" v-model="reportTitle" placeholder=" Enter Report Title"/>
+        
+        
+
+        <h3>Start Date: {{ startDate }}</h3>
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date" v-model="startDate" v-bind:max="endDate" data-cy="start-date">
+        
+
+        <h3>End Date: {{ endDate }}</h3>
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date" v-model="endDate" v-bind:min="startDate" data-cy="end-date">
+
+
+        <h3 data-cy="picked-crop">Selected Crop: {{ selectedCrop }}</h3>
+
+        <label for="crop">Select Crop:</label>
+        <dropdown-with-all 
+            data-cy="crop-dropdown"
+            includes-all 
+            :selected-val='selectedCrop'
+            :dropdown-list='cropNames'
+            @selection-changed="cropChange"
+            :disabled="false">
+        </dropdown-with-all>
+        
+        <h3>Selected Area: {{ selectedArea }}</h3>
+        <label for="area">Select Area</label>
+        <select id="area" v-model="selectedArea">
+            <option value="">All</option>
+            <option v-for="area in areaNames" :key="area" :value="area">{{ area }}</option>
+        </select>
+
+       
+        <h3></h3>
+        <button @click='generateReport' data-cy="generate-report-button">Generate Report</button>
+
+        <li v-if="reportGenerated" data-cy="farm-name"><strong>Farm:</strong> {{ farmName }}</li>
+        <li v-if="reportGenerated" data-cy="user-name"><strong>User:</strong> {{ userName }}</li>
+        <span v-if="reportGenerated" data-cy="language">{{ language }}</span>
+       
+
+        <h2 data-cy="report-header" v-if="reportGenerated">{{ reportTitle ? reportTitle : 'Mock Harvest Report'}}</h2>
+        
+       
+        <custom-table 
+            v-if="reportGenerated"
+            data-cy="test-table"
+            can-edit
+            can-delete
+            csv-name="UI_example_"
+            :columns="columns"
+            :rows="tableData" 
+        ></custom-table>
+        
+        <div v-if="tableData ==0 && reportGenerated">
+            <p>There are no matching reports</p>
+        </div>
+    </div>
+   
+    <script>
+        var app= new Vue({
+            el: '#vue-app',
+            components:{
+                'dropdown-with-all': DropdownWithAllComponent,
+                'custom-table': CustomTableComponent
+
+            },
+            
+            data: {
+                reportTitle:'My Sample Harvest Report',
+                startDate: "2019-05-05",
+                endDate: "2020-05-15",
+                selectedCrop:"All",
+                selectedArea: "",
+                reportGenerated: false,//just for report title visibility purposes
+                idToAreaMap: new Map(),
+                idToCropMap: new Map(),
+                allHarvestLogs: [],
+                farmName:"",
+                userName:"",
+                language:"",
+                columns:[
+                    {"header": 'ID', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Row', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Date', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Crop', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Area', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Yield', "visible": true, "inputType": {'type': 'no input'}},
+                    {"header": 'Units', "visible": true, "inputType": {'type': 'no input'}},
+                ]
+            },
+            created(){
+                getIDToCropMap()
+                    .then((theMap)=> {
+                        this.idToCropMap = theMap;
+                    })
+                    .catch((error)=>{
+                        console.log("Error getting crop ID to crop name map",error);
+                    });
+                getIDToAreaMap()
+                    .then((theMap) =>{
+                        this.idToAreaMap =theMap;
+                    })
+                    .catch((error)=>{
+                        console.log("Error getting Areas ",error)
+                    });
+                    
+                    
+              
+            },
+            computed:{
+                
+                cropNames(){
+                    return this.transformMapToArray(this.idToCropMap);
+                },
+                areaNames() {
+                    return this.transformMapToArray(this.idToAreaMap);
+                },
+
+                tableData(){
+                    let tableRows = [];
+
+	                for(let log of this.allHarvestLogs) {
+                        let cropName = this.idToCropMap.get(log.data.crop_tid);
+                        let areaName = log.area[0].name;
+                        let logDate = dayjs.unix(log.timestamp).format("MMMM D, YYYY");
+                        
+                        
+                        if(this.selectedCrop == "All" ||cropName == this.selectedCrop){
+                            let tableRow = {
+                                data:[
+                                    log.id,
+                                    tableRows.length+1,
+                                    logDate,
+                                    cropName,
+                                    areaName,
+                                    log.quantity[0].value, 
+                                    log.quantity[0].unit.name
+                                ]
+                
+		                    };
+                     
+                            tableRows.push(tableRow);
+                        }
+
+                     
+                    }
+                    return tableRows;
+                },
+            },
+
+                
+            
+            methods: {
+                cropChange(newCrop){
+                    this.selectedCrop=newCrop
+                    console.log("Selected Crop:", this.selectedCrop);
+                },
+                generateReport: function(){
+                    this.reportGenerated = true;
+                    
+                    this.allHarvestLogs = [];
+
+                    requestStr="/log.json?type=farm_harvest";
+                    infoRequest="/farm.json";
+
+                    
+                    Promise.all([
+                        getAllPages(requestStr, this.allHarvestLogs),
+                        fetch(infoRequest)
+                            .then((response) =>{
+                                
+                                return response.json();
+                            })
+                            .then((data)=>{
+                                this.farmName = data.name;
+                                this.userName = data.user.name;
+                                this.language = data.languages.en.language;
+
+                            })
+                        .then(()=>{
+                            console.log("All Harvest logs grabbed",this.allHarvestLogs)
+
+                        })
+                        
+                        .catch((err)=>{
+                            console.error("Error grabbing the Harvest Logs",err);
+
+                        })
+
+
+                    ])
+                
+                    
+                },
+                
+                transformMapToArray(map){
+                    return [...map.values()];
+                }
+            }
+            
+        });
+        Vue.config.devtools = true;
+    </script>
+  </body>
+</html>
