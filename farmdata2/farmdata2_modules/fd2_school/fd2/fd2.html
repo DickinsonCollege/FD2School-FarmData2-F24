@@ -93,7 +93,7 @@
             
             data: {
                 reportTitle:'My Sample Harvest Report',
-                startDate: "2020-05-05",
+                startDate: "2019-05-05",
                 endDate: "2020-05-15",
                 selectedCrop:"All",
                 selectedArea: "",
@@ -148,16 +148,15 @@
 	                for(let log of this.allHarvestLogs) {
                         let cropName = this.idToCropMap.get(log.data.crop_tid);
                         let areaName = log.area[0].name;
+                        let logDate = dayjs.unix(log.timestamp).format("MMMM D, YYYY");
                         
-
-
-                        //for the double all scenario. Just show all harvest reports
+                        
                         if(this.selectedCrop == "All" ||cropName == this.selectedCrop){
                             let tableRow = {
                                 data:[
                                     log.id,
                                     tableRows.length+1,
-                                    dayjs.unix(log.timestamp).format("MMMM D, YYYY"),
+                                    logDate,
                                     cropName,
                                     areaName,
                                     log.quantity[0].value, 

@@ -20,4 +20,5 @@ describe("Test the harvest report default values", () => {
         cy.get("[data-cy=crop-dropdown] > [data-cy=dropdown-input]").children().should("have.length",112); 
             
     })
+    
 })

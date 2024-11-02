@@ -19,4 +19,17 @@ describe("Test the harvest report default values", () => {
         cy.get("[data-cy=h6]").should("have.text","Units")
         cy.get('[data-cy=table-headers').children().should("have.length",9)
     })
+    it("Checking the harvest report filtering by crop selection",()=>{
+        cy.get('[data-cy=crop-dropdown]>[data-cy=dropdown-input]')
+            .select('BOKCHOY')
+        cy.get('[data-cy=picked-crop]').should("contain.text","BOKCHOY")
+        cy.get('[data-cy=generate-report-button]').click()
+
+
+        cy.get('[data-cy=td-r2c3]').should('contain.text','BOKCHOY')
+
+        cy.get('[data-cy=table]>[data-cy=table-body] tr',{timeout:30000})
+            .should('have.length',27)
+        
+    })
 })
