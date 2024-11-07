@@ -12,10 +12,10 @@
     <hr>
     <div id="app" v-cloak>
         <div v-if="reportGenerated">
-            <h1 data-cy="report-header">My Sample Harvest Report</h1>
+            <h1 data-cy="report-header">{{ reportTitle.trim() === '' ? 'Mock Harvest Report' : reportTitle }}</h1>
             <ul>
-                <li data-cy="farm-name">Farm:<span data-cy="farm-name-value">Sample Farm</span> </li>
-                <li data-cy="farm-user">User: <span data-cy="user-name-value">manager1</li>
+                <li data-cy="farm-name">Farm: <span data-cy="farm-name-value">Sample Farm</span></li>
+                <li data-cy="farm-user">User: <span data-cy="user-name-value">manager1</span></li>
                 <li data-cy="language">Language: <span data-cy="language-value">English</span></li>
             </ul>
         </div>
@@ -59,36 +59,20 @@
                 <p>Selected Area: {{ reportField }}</p>
             </li>
         </ul>
-        <button data-cy="generate-report-button" @click="showReport">Generate Report</button>
+        <button data-cy="generate-report-button" @click="generateReport">Generate Report</button>
         
-        <div v-if="harvestLogs && harvestLogs.length > 0">  
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Date</th>
-                        <th>Area</th>
-                        <th>Crop</th>
-                        <th>Yield</th>
-                        <th>Units</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="(log, index) in harvestReportRows" :key="index">
-                        <td>{{ index + 1 }}</td>
-                        <td>{{ log.date }}</td>
-                        <td>{{ log.area }}</td>
-                        <td>{{ log.crop }}</td>
-                        <td>{{ log.yield }}</td>
-                        <td>{{ log.units }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div v-else>
+        <div v-if="harvestLogs.length === 0">
             <p>No matching records found.</p>
         </div>
+        <custom-table 
+            v-else
+            data-cy="harvest-table"
+            :columns="columns"
+            :rows="tableRows"
+            csv-name="harvest_report_">
+        </custom-table>
     </div>
+
     <script src="https://unpkg.com/vue@2"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://unpkg.com/dayjs@1.11.10/dayjs.min.js"></script>
@@ -97,14 +81,15 @@
         var app = new Vue({
             el: '#app',
             components: {
-                'dropdown-with-all': DropdownWithAllComponent
+                'dropdown-with-all': DropdownWithAllComponent,
+                'custom-table': CustomTableComponent
             },
             data: {
                 reportGenerated: false,
                 reportTitle: '',
                 reportStartDate: '2020-05-05',
                 reportEndDate: '2020-05-15',
-                reportCrop: 'All', // Set default to 'All'
+                reportCrop: 'All',
                 reportField: 'all',
                 minDate: '2014-01-01',
                 maxDate: '2022-01-01',
@@ -117,6 +102,13 @@
                 idToCropMap: new Map(),
                 result: [],
                 cropList: [],
+                columns: [
+                    {"header": "Date", "visible": true, "inputType": {"type": "no input"}},
+                    {"header": "Area", "visible": true, "inputType": {"type": "no input"}},
+                    {"header": "Crop", "visible": true, "inputType": {"type": "no input"}},
+                    {"header": "Yield", "visible": true, "inputType": {"type": "no input"}},
+                    {"header": "Units", "visible": true, "inputType": {"type": "no input"}}
+                ]
             },
             created() {
                 this.reportGenerated = false;
@@ -137,6 +129,7 @@
                     for(let log of this.harvestLogs) {
                         try {
                             let tableRow = {
+                                logID: log.id,
                                 date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
                                 area: log.area[0].name,
                                 crop: this.idToCropMap.get(log.data.crop_tid),
@@ -151,29 +144,38 @@
                         }
                     }
                     return tableRows;
+                },
+                tableRows() {
+                    return this.harvestReportRows.map(row => ({
+                        id: row.logID,
+                        data: [
+                            row.date,
+                            row.area,
+                            row.crop,
+                            row.yield,
+                            row.units
+                        ]
+                    }));
                 }
             },
             methods: {
-                showReport() {
-                    this.reportGenerated = true;
-                },
                 cropChange(newCrop) {
                     this.reportCrop = newCrop;
                 },
                 generateReport: function() {
-                    this.showReport();
+                    this.reportGenerated = true;
                     
                     const startTimestamp = dayjs(this.reportStartDate).unix();
                     const endTimestamp = dayjs(this.reportEndDate).unix(); 
                     
                     let requestString = `/log.json?type=farm_harvest&timestamp[ge]=${startTimestamp}&timestamp[le]=${endTimestamp}`;
                     
-                    getAllPages(requestString, this.result)
-                        .then(() => {
-                            this.harvestLogs = this.result;
+                    getAllPages(requestString)
+                        .then((allLogs) => {
+                            this.harvestLogs = allLogs;
                         })
                         .catch((err) => {
-                            console.error('Error fetching harvest logs:', err);
+                            console.log("Error fetching harvest logs:", err);
                         });
                 }
             }
