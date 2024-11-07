@@ -11,7 +11,6 @@
     <p>This page is a <em>mockup</em> of a simplified harvest report.</p>
     <hr>
     <div id="app" v-cloak>
-        <!-- Changed v-show to v-if -->
         <div v-if="reportGenerated">
             <h1 data-cy="report-header">My Sample Harvest Report</h1>
             <ul>
@@ -42,11 +41,11 @@
             <li>
                 <label for="reportCrop">Crop:</label>
                 <dropdown-with-all
-                data-cy="crop-select"
-                includes-all
-                :selected-val="reportCrop"
-                :dropdown-list="cropNames"
-                @selection-changed="cropChange">
+                    data-cy="crop-select"
+                    includes-all
+                    :selected-val="reportCrop"
+                    :dropdown-list="cropNames"
+                    @selection-changed="cropChange">
                 </dropdown-with-all>
                 <p>Selected Crop: {{ reportCrop }}</p>
             </li>
@@ -101,11 +100,11 @@
                 'dropdown-with-all': DropdownWithAllComponent
             },
             data: {
-                reportGenerated: false,  // Make sure this starts as false
+                reportGenerated: false,
                 reportTitle: '',
                 reportStartDate: '2020-05-05',
                 reportEndDate: '2020-05-15',
-                reportCrop: 'All',
+                reportCrop: 'All', // Set default to 'All'
                 reportField: 'all',
                 minDate: '2014-01-01',
                 maxDate: '2022-01-01',
@@ -120,8 +119,39 @@
                 cropList: [],
             },
             created() {
-                this.reportGenerated = false;  
-                this.cropList = Array.from(new Set(this.idToCropMap.values())).sort();
+                this.reportGenerated = false;
+                getIDToCropMap()
+                    .then((theMap) => {
+                        this.idToCropMap = theMap;
+                    })
+                    .catch((err) => {
+                        console.log("Error fetching crop map", err);
+                    });
+            },
+            computed: {
+                cropNames() {
+                    return Array.from(this.idToCropMap.values()).sort();
+                },
+                harvestReportRows() {
+                    let tableRows = [];
+                    for(let log of this.harvestLogs) {
+                        try {
+                            let tableRow = {
+                                date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
+                                area: log.area[0].name,
+                                crop: this.idToCropMap.get(log.data.crop_tid),
+                                yield: log.quantity[0].value,
+                                units: log.quantity[0].unit.name
+                            };
+                            if (this.reportCrop === "All" || tableRow.crop === this.reportCrop) {
+                                tableRows.push(tableRow);
+                            }
+                        } catch (error) {
+                            console.error("Error processing log:", error);
+                        }
+                    }
+                    return tableRows;
+                }
             },
             methods: {
                 showReport() {
@@ -130,22 +160,6 @@
                 cropChange(newCrop) {
                     this.reportCrop = newCrop;
                 },
-                harvestReportRows() {
-        let tableRows = []
-        for(let log of this.harvestLogs) {
-            if(this.idToCropMap.get(log.data.crop_tid) === this.reportCrop) {
-                let tableRow = {
-                    date: dayjs.unix(log.timestamp).format('YYYY-MM-DD'),
-                    area: log.area[0].name,
-                    crop: this.idToCropMap.get(log.data.crop_tid),
-                    yield: log.quantity[0].value,
-                    units: log.quantity[0].unit.name
-                }
-                tableRows.push(tableRow)
-            }
-        }
-        return tableRows
-    },
                 generateReport: function() {
                     this.showReport();
                     
