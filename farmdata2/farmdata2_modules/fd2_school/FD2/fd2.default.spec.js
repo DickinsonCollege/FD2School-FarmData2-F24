@@ -1,56 +1,61 @@
-describe("Test the harvest report default values", () => {
+// Initial setup (Steps 33-34)
+describe('Test the harvest report table', () => {
     beforeEach(() => {
-        cy.login("manager1", "farmdata2")
-        cy.visit("/farm/fd2-school/fd2")
-    })
-      
-    it("Check the page header", () => {
-        cy.get("[data-cy=page-header]")
-            .should("have.text", "Harvest Report")
+        cy.login('manager1', 'farmdata2')
+        cy.visit('/farm/fd2-school/fd2')
     })
 
-    it("Verify default values for date inputs", () => {
-        cy.get("[data-cy=start-date]")
-            .should("have.value", "2020-05-05")
-        cy.get("[data-cy=end-date]")
-            .should("have.value", "2020-05-15")
-    })
+    // Test header text and column count (Steps 34-37)
+    it('should verify table headers and column count', () => {
+        // Generate report to make table appear
+        cy.get('[data-cy=generate-report-button]')
+            .click()
 
-    it('should find the crop dropdown element', () => {
-        cy.get('[data-cy=crop-select]')
-            .should('exist')
-    })
-    
-    it("Check the crop dropdown", () => {
-        // Wait for dropdown to exist and be populated
-        cy.get('[data-cy=crop-select]')
-            .should('exist')
-            .find('[data-cy=dropdown-input]')
+        // Wait for table to be present
+        cy.get('[data-cy=harvest-table]')
             .should('exist')
 
-        // Check first option is 'All'
-        cy.get("[data-cy=crop-select] > [data-cy=dropdown-input] > [data-cy=option0]")
-            .should("have.text", "All")
+        // Check headers
+        cy.get('[data-cy=h0]').should('have.text', 'Date')
+        cy.get('[data-cy=h1]').should('have.text', 'Area')
+        cy.get('[data-cy=h2]').should('have.text', 'Crop')
+        cy.get('[data-cy=h3]').should('have.text', 'Yield')
+        cy.get('[data-cy=h4]').should('have.text', 'Units')
 
-        // Check second option is 'ARUGULA'
-        cy.get("[data-cy=crop-select] > [data-cy=dropdown-input] > [data-cy=option1]")
-            .should("have.text", "ARUGULA")
-
-        // Check fifth option is 'BEAN-DRY'
-        cy.get("[data-cy=crop-select] > [data-cy=dropdown-input] > [data-cy=option4]")
-            .should("have.text", "BEAN-DRY")
-
-        // Verify total number of options
-        cy.get("[data-cy=crop-select] > [data-cy=dropdown-input]")
+        // Check column count using header-row
+        cy.get('[data-cy=header-row]')
             .children()
-            .should("have.length", 112)
+            .should('have.length', 5)
     })
 
-    it("Check farm details are initially hidden", () => {
-        cy.get("[data-cy=report-header]")
-            .should("not.exist")
-            
-        cy.get("[data-cy=farm-name]")
-            .should("not.exist")
+    // Test crop filtering (Step 38)
+    it('should filter table by crop correctly', () => {
+        // Generate initial report
+        cy.get('[data-cy=generate-report-button]')
+            .click()
+
+        // Wait for table to be present
+        cy.get('[data-cy=harvest-table]')
+            .should('exist')
+
+        // Select BEETS from dropdown
+        cy.get('[data-cy=crop-select] > [data-cy=dropdown-input]')
+            .select('BEETS')
+
+        // Generate report again to apply filter
+        cy.get('[data-cy=generate-report-button]')
+            .click()
+
+        // Check table body rows
+        cy.get('[data-cy=table-body]')
+            .find('tr')
+            .should('have.length.gt', 0)
+            .each(($row) => {
+                // Check that each row's crop cell contains BEETS
+                cy.wrap($row)
+                    .find('[data-cy^=cell]') // Find cells in this row
+                    .eq(2)  // Crop column (index 2)
+                    .should('contain', 'BEETS')
+            })
     })
 })
