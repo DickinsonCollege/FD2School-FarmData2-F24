@@ -1,643 +1,925 @@
 <body>
-    <div id='seedingInput'>
-        <h1 style='text-align:center;'>Seeding Input Log</h1> 
-        <div data-cy="alert-container" id="scrollBanners" class="alert-boxs" style='max-width: 500px; text-align: center; margin:auto; font-size: large'>
-            <error-banner data-cy="alert-err-handler" :visible="errBannerVisibility"></error-banner>
-            <div data-cy='alert-cancel' class="alert alert-danger" style="display: none;" role="alert" v-show="isConfirmed == false">
-                Log submission canceled by user. The log is <strong>NOT</strong> saved.  
-            </div>
-            <div data-cy='alert-success' class="alert alert-success" role="alert" v-show="isConfirmed == true">
-                Log created and saved successfully.
-            </div>
-        </div>
-        <br>
-        <fieldset class="panel panel-default center-block" style='max-width: 500px;'>
-            <legend class="panel-heading" style='background-color: #da4f3f; color: white;font-size: x-large;'>Data</legend>
-            <div class="center-block" style='padding: 12px; text-align:center; font-size: medium; margin-top: 45px'>
-                <date-selection data-cy="date-selection" :set-date='selectedDate' @date-changed='setNewDate' :disabled='submitInProgress'>Date:<label style='color: #da4f3f'>*</label></date-selection> 
-                <br>
-                <dropdown-with-all data-cy="crop-selection" :selected-val='selectedCrop' :dropdown-list='cropArray' @selection-changed='setNewCrop' :disabled='submitInProgress'>Crop:<label style='color: #da4f3f;'>*</label></dropdown-with-all>
-            </div>
-        </fieldset>
-        <fieldset class="panel panel-default center-block" style="max-width: 500px;">
-            <legend class="panel-heading" style='background-color: #da4f3f; color: white;font-size: x-large;'>
-                <input data-cy='tray-seedings' type='radio' name='typeOfSeeding' value='Tray Seedings' v-model='selectedSeedingType' :checked='selectedSeedingType == "Tray Seedings"' v-bind:disabled='submitInProgress'><label>Tray &nbsp;</label>
-                <input data-cy='direct-seedings' type='radio' name='typeOfSeeding' value='Direct Seedings'v-model='selectedSeedingType' :checked='selectedSeedingType == "Direct Seedings"' v-bind:disabled='submitInProgress'><label>Direct</label> 
-            </legend>
-            <div v-show='(selectedSeedingType=="")' style='text-align:center;font-size: medium;'>
-                <p>Please Select Tray Seeding or Direct Seeding<label style='color: #da4f3f'>*</label></p>
-            </div>
-            <div v-show='(selectedSeedingType=="Tray Seedings")' style='padding: 12px; text-align:center; font-size: medium; margin-top: 45px;'> 
-                <dropdown-with-all data-cy="tray-area-selection" :selected-val='selectedArea' :dropdown-list='areaFilter' @selection-changed='setNewArea' style='width: 125px;' :disabled='submitInProgress'>Area:<label style='color: #da4f3f'>*</label></dropdown-with-all>
-                <br>
-                <label>Cells/Tray:<label style='color: #da4f3f'>*</label>
-                <regex-input data-cy='num-cell-input' :reg-exp="regPosInt" :default-val="numCellsPerTray" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumCellsPerTray" @match-changed="(newBool) =>updateValidMap('validNumCellsPerTray', newBool)"></regex-input> 
-                </label>
-                <label>Trays:<label style='color: #da4f3f'>*</label> 
-                <regex-input data-cy='num-tray-input' :reg-exp="regPosInt" :default-val="numOfTrays" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumOfTrays" @match-changed="(newBool) => updateValidMap('validNumOfTrays', newBool)"></regex-input> 
-                </label>
-                <label>Seeds:<label style='color: #da4f3f'>*</label> 
-                <regex-input data-cy='num-seed-input' :reg-exp="regPosInt" :default-val="numSeedsPlanted" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumSeedsPlanted" @match-changed="(newBool) => updateValidMap('validNumSeedsPlanted', newBool)"></regex-input>                 
-                </label>
-            </div>
-            <div v-show='(selectedSeedingType=="Direct Seedings")' style='padding: 12px; text-align:center; font-size: medium; margin-top: 45px;'>
-                <dropdown-with-all data-cy="direct-area-selection" :selected-val='selectedArea' :dropdown-list='areaFilter' @selection-changed='setNewArea' style='width: 125px;' :disabled='submitInProgress'>Area:<label style='color: #da4f3f'>*</label></dropdown-with-all>
-                <br>
-                <label>Rows/Bed:<label style='color: #da4f3f'>*</label> 
-                <regex-input data-cy='num-rowbed-input' :reg-exp="regPosInt" set-type="number" :default-val="numRowBed" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumRowBed" @match-changed="(newBool) => updateValidMap('validNumRowBed', newBool)"></regex-input>                 
-                </label>
-                <label><dropdown-with-all data-cy='unit-feet' :selected-val='selectedFeetUnit' :dropdown-list='feetUnits' @selection-changed='setNewFeetUnit' style='padding-left:20px;' :disabled='submitInProgress'></dropdown-with-all>
-                <label style='color: #da4f3f'>*</label> 
-                <regex-input data-cy='num-feet-input':reg-exp="regPosInt" set-type="number" :default-val="numFeet" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumFeet" @match-changed="(newBool) => updateValidMap('validNumFeet', newBool)"></regex-input>                                
-                </label>
-            </div>
-        </fieldset>   
-        <fieldset class="panel panel-default center-block" style="max-width: 500px;" v-show="configToIDMap.labor != 'Hidden'">
-            <legend class="panel-heading" style='background-color: #da4f3f; color: white;font-size: x-large;'>Labor</legend>
-            <div class="center-block" style='padding: 12px;text-align:center;font-size: medium; margin-top: 45px;'>
-                <label style='color: #da4f3f' v-show="configToIDMap.labor == 'Required'">*&nbsp;</label>
-                <regex-input data-cy='num-worker-input' :reg-exp="regNumWorker" :default-val="numWorkers" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setNewNumWorkers" @match-changed="(newBool) => updateValidMap('validNumWorkers', newBool)"></regex-input>                                                
-                <label>&nbsp; Worker(s) for </label> 
-                <label><label style='color: #da4f3f' v-show="configToIDMap.labor == 'Required'">*</label> 
-                <regex-input data-cy='minute-input' v-show='selectedTimeUnit == "minutes"' :reg-exp='regMin' :default-val="minute" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setMinute" @match-changed="(newBool) => updateValidMap('validMinute', newBool)"></regex-input>                                                
-                <regex-input data-cy='hour-input' v-show='selectedTimeUnit == "hours"' :reg-exp='regHour' :default-val="hour" set-type="number" set-min="0" :disabled="submitInProgress" @input-changed="setHour" @match-changed="(newBool) => updateValidMap('validHour', newBool)"></regex-input>                                                
-                <dropdown-with-all data-cy='time-unit' style='text-align:center;' :selected-val='selectedTimeUnit' :dropdown-list='timeUnits' @selection-changed='setNewTimeUnit' :disabled='submitInProgress'></dropdown-with-all></label>
-            </div>
-        </fieldset>
-        <fieldset class="panel panel-default center-block" style='max-width: 500px; '>
-        <legend class="panel-heading" style='background-color: #da4f3f; color: white;font-size: x-large;'>Comments</legend>
-        <div class="center-block" style='padding: 12px; text-align: center; font-size: medium; margin-top: 45px;'>
-            <textarea data-cy="comments" v-model='comments' style='height: 25px; width: 400px;' :disabled='submitInProgress'></textarea>
-        </div>
-        </fieldset>
-        <div class="confirm-cancel-button" style='display: flex; justify-content: center;' v-show="submitInProgress==true">
-            <button data-cy="confirm-button" class="btn center-block" style='background-color: #da4f3f; color: white; margin: 15px; width: 100px; font-size: large;' @click='saveLog'>Confirm</button>
-            <button data-cy="cancel-button" class="btn center-block" style='background-color: gray; color: white; margin: 15px; width: 100px; font-size: large;' @click='cancelLog'>Cancel</button>
-        </div>
-        <button data-cy="submit-button" class="btn center-block" style='background-color: #da4f3f; color: white; font-size: large;' :disabled='formNotCompleted' @click='submitLog'>Submit</button>
-        <div style='text-align:center;'>
-            <label style='color: #da4f3f'>* required field.</label>
-        </div> 
-
-        <div data-cy="page-loaded" v-show=false>{{ pageLoaded }}</div>
+  <div id="seedingInput">
+    <h1 style="text-align: center">Seeding Input Log</h1>
+    <div
+      data-cy="alert-container"
+      id="scrollBanners"
+      class="alert-boxs"
+      style="
+        max-width: 500px;
+        text-align: center;
+        margin: auto;
+        font-size: large;
+      ">
+      <error-banner
+        data-cy="alert-err-handler"
+        :visible="errBannerVisibility"></error-banner>
+      <div
+        data-cy="alert-cancel"
+        class="alert alert-danger"
+        style="display: none"
+        role="alert"
+        v-show="isConfirmed == false">
+        Log submission canceled by user. The log is <strong>NOT</strong> saved.
+      </div>
+      <div
+        data-cy="alert-success"
+        class="alert alert-success"
+        role="alert"
+        v-show="isConfirmed == true">
+        Log created and saved successfully.
+      </div>
     </div>
-    
-    <script>
-        new Vue({
-            el: '#seedingInput',
-            components:{
-                'date-selection': DateSelectionComponent,
-                'dropdown-with-all': DropdownWithAllComponent,
-                'regex-input': RegexInputComponent,
-                'error-banner': ErrorBannerComponent,
-            },
-            data:{
-                sessionToken: null,
-                selectedDate: dayjs().format('YYYY-MM-DD').toString(),
-                selectedCrop: null,
-                selectedArea: null,
-                savedArea: null,
-                selectedSeedingType: '',
-                selectedFeetUnit: 'Bed Feet',
-                selectedTimeUnit: 'minutes',
-                comments: '',
-                numWorkers: null,
-                minute: null,
-                hour: null, 
-                numOfTrays: null,
-                numCellsPerTray: null,
-                numSeedsPlanted: null,
-                numRowBed: null,
-                numFeet: null,
-                cropArray: [],
-                areaResponse: [],
-                timeUnits: ['minutes', 'hours'],
-                feetUnits: ['Bed Feet', 'Row Feet'],
-                cropToIDMap: new Map(),
-                userToIDMap: new Map(),
-                areaToIDMap: new Map(),
-                logTypeToIDMap: new Map(),
-                plantingId: 0,
-                isConfirmed: null,
-                submitInProgress: false, 
-                validMap: {
-                    "validNumWorkers": false,
-                    "validMinute": false,
-                    "validHour": false,
-                    "validNumOfTrays": false,
-                    "validNumCellsPerTray": false,
-                    "validNumSeedsPlanted": false,
-                    "validNumRowBed": false,
-                    "validNumFeet": false,
-                },
-                regexMap : regexMap,
-                regPosInt: regexMap.regPosInt,
-                regMin: regexMap.regPosInt,
-                regHour:regexMap.regPosFloatTwoDigit,
-                regNumWorker: regexMap.regPosInt,
-                errBannerVisibility: false,
-                configToIDMap: new Map(),
+    <br />
+    <fieldset class="panel panel-default center-block" style="max-width: 500px">
+      <legend
+        class="panel-heading"
+        style="background-color: #da4f3f; color: white; font-size: x-large">
+        Data
+      </legend>
+      <div
+        class="center-block"
+        style="
+          padding: 12px;
+          text-align: center;
+          font-size: medium;
+          margin-top: 45px;
+        ">
+        <date-selection
+          data-cy="date-selection"
+          :set-date="selectedDate"
+          @date-changed="setNewDate"
+          :disabled="submitInProgress"
+          >Date:<label style="color: #da4f3f">*</label></date-selection
+        >
+        <br />
+        <dropdown-with-all
+          data-cy="crop-selection"
+          :selected-val="selectedCrop"
+          :dropdown-list="cropArray"
+          @selection-changed="setNewCrop"
+          :disabled="submitInProgress"
+          >Crop:<label style="color: #da4f3f">*</label></dropdown-with-all
+        >
+      </div>
+    </fieldset>
+    <fieldset class="panel panel-default center-block" style="max-width: 500px">
+      <legend
+        class="panel-heading"
+        style="background-color: #da4f3f; color: white; font-size: x-large">
+        <input
+          data-cy="tray-seedings"
+          type="radio"
+          name="typeOfSeeding"
+          value="Tray Seedings"
+          v-model="selectedSeedingType"
+          :checked='selectedSeedingType == "Tray Seedings"'
+          v-bind:disabled="submitInProgress" /><label>Tray &nbsp;</label>
+        <input
+          data-cy="direct-seedings"
+          type="radio"
+          name="typeOfSeeding"
+          value="Direct Seedings"
+          v-model="selectedSeedingType"
+          :checked='selectedSeedingType == "Direct Seedings"'
+          v-bind:disabled="submitInProgress" /><label>Direct</label>
+      </legend>
+      <div
+        v-show='(selectedSeedingType=="")'
+        style="text-align: center; font-size: medium">
+        <p>
+          Please Select Tray Seeding or Direct Seeding<label
+            style="color: #da4f3f"
+            >*</label
+          >
+        </p>
+      </div>
+      <div
+        v-show='(selectedSeedingType=="Tray Seedings")'
+        style="
+          padding: 12px;
+          text-align: center;
+          font-size: medium;
+          margin-top: 45px;
+        ">
+        <dropdown-with-all
+          data-cy="tray-area-selection"
+          :selected-val="selectedArea"
+          :dropdown-list="areaFilter"
+          @selection-changed="setNewArea"
+          style="width: 125px"
+          :disabled="submitInProgress"
+          >Area:<label style="color: #da4f3f">*</label></dropdown-with-all
+        >
+        <br />
+        <label
+          >Cells/Tray:<label style="color: #da4f3f">*</label>
+          <regex-input
+            data-cy="num-cell-input"
+            :reg-exp="regPosInt"
+            :default-val="numCellsPerTray"
+            set-type="number"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setNewNumCellsPerTray"
+            @match-changed="(newBool) =>updateValidMap('validNumCellsPerTray', newBool)"></regex-input>
+        </label>
+        <label
+          >Trays:<label style="color: #da4f3f">*</label>
+          <regex-input
+            data-cy="num-tray-input"
+            :reg-exp="regPosInt"
+            :default-val="numOfTrays"
+            set-type="number"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setNewNumOfTrays"
+            @match-changed="(newBool) => updateValidMap('validNumOfTrays', newBool)"></regex-input>
+        </label>
+        <label
+          >Seeds:<label style="color: #da4f3f">*</label>
+          <regex-input
+            data-cy="num-seed-input"
+            :reg-exp="regPosInt"
+            :default-val="numSeedsPlanted"
+            set-type="number"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setNewNumSeedsPlanted"
+            @match-changed="(newBool) => updateValidMap('validNumSeedsPlanted', newBool)"></regex-input>
+        </label>
+      </div>
+      <div
+        v-show='(selectedSeedingType=="Direct Seedings")'
+        style="
+          padding: 12px;
+          text-align: center;
+          font-size: medium;
+          margin-top: 45px;
+        ">
+        <dropdown-with-all
+          data-cy="direct-area-selection"
+          :selected-val="selectedArea"
+          :dropdown-list="areaFilter"
+          @selection-changed="setNewArea"
+          style="width: 125px"
+          :disabled="submitInProgress"
+          >Area:<label style="color: #da4f3f">*</label></dropdown-with-all
+        >
+        <br />
+        <label
+          >Rows/Bed:<label style="color: #da4f3f">*</label>
+          <regex-input
+            data-cy="num-rowbed-input"
+            :reg-exp="regPosInt"
+            set-type="number"
+            :default-val="numRowBed"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setNewNumRowBed"
+            @match-changed="(newBool) => updateValidMap('validNumRowBed', newBool)"></regex-input>
+        </label>
+        <label
+          ><dropdown-with-all
+            data-cy="unit-feet"
+            :selected-val="selectedFeetUnit"
+            :dropdown-list="feetUnits"
+            @selection-changed="setNewFeetUnit"
+            style="padding-left: 20px"
+            :disabled="submitInProgress"></dropdown-with-all>
+          <label style="color: #da4f3f">*</label>
+          <regex-input
+            data-cy="num-feet-input"
+            :reg-exp="regPosInt"
+            set-type="number"
+            :default-val="numFeet"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setNewNumFeet"
+            @match-changed="(newBool) => updateValidMap('validNumFeet', newBool)"></regex-input>
+        </label>
+      </div>
+    </fieldset>
+    <fieldset
+      class="panel panel-default center-block"
+      style="max-width: 500px"
+      v-show="configToIDMap.labor != 'Hidden'">
+      <legend
+        class="panel-heading"
+        style="background-color: #da4f3f; color: white; font-size: x-large">
+        Labor
+      </legend>
+      <div
+        class="center-block"
+        style="
+          padding: 12px;
+          text-align: center;
+          font-size: medium;
+          margin-top: 45px;
+        ">
+        <label style="color: #da4f3f" v-show="configToIDMap.labor == 'Required'"
+          >*&nbsp;</label
+        >
+        <regex-input
+          data-cy="num-worker-input"
+          :reg-exp="regNumWorker"
+          :default-val="numWorkers"
+          set-type="number"
+          set-min="0"
+          :disabled="submitInProgress"
+          @input-changed="setNewNumWorkers"
+          @match-changed="(newBool) => updateValidMap('validNumWorkers', newBool)"></regex-input>
+        <label>&nbsp; Worker(s) for </label>
+        <label
+          ><label
+            style="color: #da4f3f"
+            v-show="configToIDMap.labor == 'Required'"
+            >*</label
+          >
+          <regex-input
+            data-cy="minute-input"
+            v-show='selectedTimeUnit == "minutes"'
+            :reg-exp="regMin"
+            :default-val="minute"
+            set-type="number"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setMinute"
+            @match-changed="(newBool) => updateValidMap('validMinute', newBool)"></regex-input>
+          <regex-input
+            data-cy="hour-input"
+            v-show='selectedTimeUnit == "hours"'
+            :reg-exp="regHour"
+            :default-val="hour"
+            set-type="number"
+            set-min="0"
+            :disabled="submitInProgress"
+            @input-changed="setHour"
+            @match-changed="(newBool) => updateValidMap('validHour', newBool)"></regex-input>
+          <dropdown-with-all
+            data-cy="time-unit"
+            style="text-align: center"
+            :selected-val="selectedTimeUnit"
+            :dropdown-list="timeUnits"
+            @selection-changed="setNewTimeUnit"
+            :disabled="submitInProgress"></dropdown-with-all
+        ></label>
+      </div>
+    </fieldset>
+    <fieldset class="panel panel-default center-block" style="max-width: 500px">
+      <legend
+        class="panel-heading"
+        style="background-color: #da4f3f; color: white; font-size: x-large">
+        Comments
+      </legend>
+      <div
+        class="center-block"
+        style="
+          padding: 12px;
+          text-align: center;
+          font-size: medium;
+          margin-top: 45px;
+        ">
+        <textarea
+          data-cy="comments"
+          v-model="comments"
+          style="height: 25px; width: 400px"
+          :disabled="submitInProgress"></textarea>
+      </div>
+    </fieldset>
+    <div
+      class="confirm-cancel-button"
+      style="display: flex; justify-content: center"
+      v-show="submitInProgress==true">
+      <button
+        data-cy="confirm-button"
+        class="btn center-block"
+        style="
+          background-color: #da4f3f;
+          color: white;
+          margin: 15px;
+          width: 100px;
+          font-size: large;
+        "
+        @click="saveLog">
+        Confirm
+      </button>
+      <button
+        data-cy="cancel-button"
+        class="btn center-block"
+        style="
+          background-color: gray;
+          color: white;
+          margin: 15px;
+          width: 100px;
+          font-size: large;
+        "
+        @click="cancelLog">
+        Cancel
+      </button>
+    </div>
+    <button
+      data-cy="submit-button"
+      class="btn center-block"
+      style="background-color: #da4f3f; color: white; font-size: large"
+      :disabled="formNotCompleted"
+      @click="submitLog">
+      Submit
+    </button>
+    <div style="text-align: center">
+      <label style="color: #da4f3f">* required field.</label>
+    </div>
 
-                createdCount: 0, 
-            },
-            methods:{
-                updateValidMap(key, bool) {    
-                    this.validMap[key] = bool;
-                },
-                setNewDate(newDate){
-                    this.selectedDate = newDate
-                },
-                setNewCrop(newCrop){
-                    this.selectedCrop = newCrop
-                },
-                setNewArea(newArea){
-                    this.selectedArea = newArea
-                    this.savedArea = newArea
-                },
-                setNewTimeUnit(newTimeUnit){
-                    this.selectedTimeUnit = newTimeUnit
-                },
-                setNewFeetUnit(newFeetUnit){
-                    this.selectedFeetUnit = newFeetUnit
-                },
-                setNewNumCellsPerTray(newNumCellsPerTray){
-                    this.numCellsPerTray = newNumCellsPerTray
-                },
-                setNewNumOfTrays(newNumOfTrays){
-                    this.numOfTrays = newNumOfTrays
-                },
-                setNewNumSeedsPlanted(newNumSeedsPlanted) {
-                    this.numSeedsPlanted = newNumSeedsPlanted
-                },
-                setNewNumRowBed(newNumRowBed) {
-                    this.numRowBed = newNumRowBed
-                },
-                setNewNumFeet(newNumFeet) {
-                    this.numFeet = newNumFeet
-                },
-                setNewNumWorkers(newNumWorkers) {
-                    if(this.configToIDMap.labor == "Optional") {
-                        if (newNumWorkers == "" || newNumWorkers == null) {
-                            this.regMin = "|" + regexMap.regPosInt
-                            this.regHour = "|" + regexMap.regPosFloatTwoDigit
-                        } else {
-                            this.regMin = regexMap.regPosInt
-                            this.regHour = regexMap.regPosFloatTwoDigit
-                            
-                        }                
-                    }
-                    this.numWorkers = newNumWorkers
+    <div data-cy="page-loaded" v-show="false">{{ pageLoaded }}</div>
+  </div>
 
-                },
-                setMinute(newMinute) {
-                    
-                    if(this.configToIDMap.labor == "Optional") {
-                        if (newMinute == "" || newMinute == null) {
-                            this.regNumWorker = "|" + regexMap.regPosInt
-                        } else {
-                            this.regNumWorker = regexMap.regPosInt
-                        }
+  <script>
+    new Vue({
+      el: "#seedingInput",
+      components: {
+        "date-selection": DateSelectionComponent,
+        "dropdown-with-all": DropdownWithAllComponent,
+        "regex-input": RegexInputComponent,
+        "error-banner": ErrorBannerComponent,
+      },
+      data: {
+        sessionToken: null,
+        selectedDate: dayjs().format("YYYY-MM-DD").toString(),
+        selectedCrop: null,
+        selectedArea: null,
+        savedArea: null,
+        selectedSeedingType: "",
+        selectedFeetUnit: "Bed Feet",
+        selectedTimeUnit: "minutes",
+        comments: "",
+        numWorkers: null,
+        minute: null,
+        hour: null,
+        numOfTrays: null,
+        numCellsPerTray: null,
+        numSeedsPlanted: null,
+        numRowBed: null,
+        numFeet: null,
+        cropArray: [],
+        areaResponse: [],
+        timeUnits: ["minutes", "hours"],
+        feetUnits: ["Bed Feet", "Row Feet"],
+        cropToIDMap: new Map(),
+        userToIDMap: new Map(),
+        areaToIDMap: new Map(),
+        logTypeToIDMap: new Map(),
+        plantingId: 0,
+        isConfirmed: null,
+        submitInProgress: false,
+        validMap: {
+          validNumWorkers: false,
+          validMinute: false,
+          validHour: false,
+          validNumOfTrays: false,
+          validNumCellsPerTray: false,
+          validNumSeedsPlanted: false,
+          validNumRowBed: false,
+          validNumFeet: false,
+        },
+        regexMap: regexMap,
+        regPosInt: regexMap.regPosInt,
+        regMin: regexMap.regPosInt,
+        regHour: regexMap.regPosFloatTwoDigit,
+        regNumWorker: regexMap.regPosInt,
+        errBannerVisibility: false,
+        configToIDMap: new Map(),
 
-                    }
-                    this.minute = newMinute
-                },
-                setHour(newHour) {
-                    if(this.configToIDMap.labor == "Optional"){
-                        if (newHour == "" || newHour == null) {
-                            this.regNumWorker = "|" + regexMap.regPosInt
-                        } else {
-                            this.regNumWorker = regexMap.regPosInt
-                        }
-                    }
-                    this.hour = newHour
-                },
-                clearFields(){
-                    this.selectedDate = dayjs().format('YYYY-MM-DD').toString() 
-                    this.selectedCrop = null 
-                    this.selectedArea = null
-                    this.savedArea = null
-                    this.selectedSeedingType = ''
-                    this.selectedFeetUnit = 'Bed Feet'
-                    this.selectedTimeUnit = 'minutes'
-                    this.comments = ''
-                    this.numWorkers = null
-                    this.numOfTrays= null
-                    this.numCellsPerTray= null
-                    this.numSeedsPlanted= null
-                    this.numRowBed= null
-                    this.numFeet= null
-                    this.minute = null
-                    this.hour = null
-                },
-                submitLog() {
-                    this.submitInProgress = true
-                },
-                saveLog() {
-                    createRecord('/farm_asset', this.plantingLogData, this.sessionToken)
-                        .then((response) => {
-                            this.plantingId = response.data.id
-                        })
-                        .then(() => {
-                            createRecord('/log', this.logData, this.sessionToken).then((response) => {
-                                this.clearFields();
-                            })    
-                            this.isConfirmed = true
-                            this.submitInProgress = false
-                            var successBanner = document.getElementById('scrollBanners')
-                            var pageHeader = document.getElementById('navbar')
-                            var headerBounds = pageHeader.getBoundingClientRect()
-                            var alertBounds = successBanner.getBoundingClientRect()
-                            scrollBy({
-                                top: alertBounds.top - headerBounds.bottom,
-                                behavior: 'smooth'
-                            })
-                            setTimeout(() => { 
-                                this.isConfirmed = null
-                            }, 3000)     
-                        })
-                        .catch((err) => { 
-                            this.errBannerVisibility = true
-                        })
-                },
-                cancelLog() {
-                    this.submitInProgress = false
-                    this.isConfirmed = false
-                    var cancelBanner = document.getElementById('scrollBanners')
-                    var pageHeader = document.getElementById('navbar')
-                    var headerBounds = pageHeader.getBoundingClientRect()
-                    var alertBounds = cancelBanner.getBoundingClientRect()
-                    scrollBy({
-                        top: alertBounds.top - headerBounds.bottom,
-                        behavior: 'smooth'
-                    })
-                    setTimeout(() => { 
-                        this.isConfirmed = null
-                    }, 3000)
-                },
-            },
-            computed: {
-                areaFilter(){
-                    let areaArray = []
-                    if(this.selectedSeedingType == 'Tray Seedings'){
-                        let trayAreaOnly = this.areaResponse.filter((x) => x.area_type === 'greenhouse')
-                        areaArray = trayAreaOnly.map((h) => h.name)
-                        if(!areaArray.includes(this.selectedArea)){
-                            this.selectedArea = null
-                        }
-                        if(areaArray.includes(this.savedArea)){
-                            this.selectedArea = this.savedArea
-                        }
-                    }
-                    else if(this.selectedSeedingType == 'Direct Seedings'){
-                        let directAreaOnly = this.areaResponse.filter((x) => x.area_type === 'field' || x.area_type === 'bed')
-                        areaArray = directAreaOnly.map((h) => h.name)
-                        if(!areaArray.includes(this.selectedArea)){
-                            this.selectedArea = null
-                        }
-                        if(areaArray.includes(this.savedArea)){
-                            this.selectedArea = this.savedArea
-                        }
-                    }
-                    else{
-                        areaArray = this.areaResponse.map((h) => h.name)
-                    }
-                    return areaArray
-                },
-                formNotCompleted(){
-                    if (this.submitInProgress == true){
-                        return true
-                    }
-                    if(this.selectedCrop == null){
-                        return true
-                    }
-                    if(this.selectedArea == null){
-                        return true
-                    }
-                    if(this.selectedSeedingType == ''){
-                        return true
-                    }
-                    if(this.configToIDMap.labor == "Required"){
-                        if(this.selectedTimeUnit == 'minutes'){
-                            if(!this.validMap["validMinute"]){
-                                return true
-                            }
-                        }
-                        if(this.selectedTimeUnit == 'hours'){
-                            if(!this.validMap["validHour"]){
-                                return true
-                            }
-                        }
-                        if(!this.validMap["validNumWorkers"]){
-                            return true
-                        }
-                    }
-                    if(this.configToIDMap.labor == "Optional") {
-                        if(this.selectedTimeUnit == 'minutes'){
-                            if(!this.validMap['validMinute'] ^ !this.validMap['validNumWorkers']){
-                                return true
-                            }
-                        }
-                        if(this.selectedTimeUnit == 'hours'){
-                            if(!this.validMap['validHours'] ^ !this.validMap['validNumWorkers']){
-                                return true
-                            }
-                        }
-                    }
-                    if(this.selectedSeedingType == 'Direct Seedings'){
-                        if(!this.validMap["validNumFeet"]){
-                            return true
-                        }
-                        if(!this.validMap["validNumRowBed"]){
-                            return true
-                        }
-                    }
-                    if(this.selectedSeedingType == 'Tray Seedings'){
-                        if(!this.validMap["validNumCellsPerTray"]){
-                            return true
-                        }
-                        if(!this.validMap["validNumOfTrays"]){
-                            return true
-                        }
-                        
-                        if(!this.validMap["validNumSeedsPlanted"]){
-                            return true
-                        }
-                    }
-
-                    return false
-                },
-                plantingLogData(){
-                    planting = {
-                        "name": this.selectedDate + " " + this.selectedCrop + " " + this.selectedArea,
-                        "type": "planting",
-                        "crop": [{
-                            "id": this.cropToIDMap.get(this.selectedCrop),
-                            "resource": "taxonomy_term"
-                        }],
-                    }
-                    return planting
-                },
-                logData(){
-                    let quantityUnits = []
-                    let seedingID = 0
-                    if(this.selectedSeedingType == "Direct Seedings"){
-                        quantityUnits = this.quantityDirectSeeding
-                        seedingID = this.logTypeToIDMap.get('Direct Seedings')
-                    }
-                    else if (this.selectedSeedingType == "Tray Seedings"){
-                        quantityUnits = this.quantityTraySeeding
-                        seedingID = this.logTypeToIDMap.get('Tray Seedings')
-                    }
-                    seeding = {
-                        "name": this.selectedDate + " " + this.selectedCrop + " " + this.selectedArea,
-                        "type": "farm_seeding",
-                        "timestamp": dayjs(this.selectedDate).unix(),
-                        "done": "1",  //any seeding recorded is done.
-                        "notes": {
-                            "value": this.comments,
-                            "format": "farm_format"
-                        },
-                        "asset": [{ 
-                            "id": this.plantingId,   //Associated planting
-                            "resource": "farm_asset"
-                        }],
-                        "log_category": [{
-                            "id": seedingID,
-                            "resource": "taxonomy_term"
-                        }],
-                        "movement": {
-                            "area": [{
-                                "id": this.areaToIDMap.get(this.selectedArea),
-                                "resource": "taxonomy_term"
-                            }]
-                        },
-                        "quantity": quantityUnits,
-                        "created": dayjs().unix(),
-                        "lot_number": "N/A (No Variety)",
-                        "data": { 
-                            "crop_tid": this.cropToIDMap.get(this.selectedCrop)
-                        }
-                    }
-                    return seeding
-                },
-                quantityDirectSeeding(){
-                    let time = this.hour
-                    let feet = this.numFeet
-                    if(this.selectedTimeUnit == 'minutes'){
-                        time = this.minute
-                        time = (Math.round((time / 60)*100))/100
-                    }
-                    if(this.selectedFeetUnit == 'Bed Feet'){
-                        feet = feet * this.numRowBed
-                    }
-                    quantity = [
-                        {
-                            "measure": "length", 
-                            "value": feet,  //total row feet
-                            "unit": {
-                                "id": this.unitToIDMap.get('ROW FEET'), 
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Amount planted"
-                        },
-                        {
-                            "measure": "ratio", 
-                            "value": this.numRowBed,
-                            "unit": {
-                                "id": this.unitToIDMap.get('ROWS/BED'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Rows/Bed"
-                        },
-                        {
-                            "measure": "time", 
-                            "value": time, 
-                            "unit": {
-                                "id": this.unitToIDMap.get('HOURS'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Labor"
-                        },
-                        {
-                            "measure": "count", 
-                            "value": this.numWorkers, 
-                            "unit": {
-                                "id": this.unitToIDMap.get('PEOPLE'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Workers"
-                        },
-                    ]
-                    return quantity
-                },
-                quantityTraySeeding(){
-                    let time = this.hour
-                    if(this.selectedTimeUnit == 'minutes'){
-                        time = this.minute
-                        time = (Math.round((time / 60)*100))/100
-                    }
-                    quantity = [
-                        {
-                            "measure": "count", 
-                            "value": this.numSeedsPlanted,  //number of seed planted
-                            "unit": {
-                                "id": this.unitToIDMap.get('SEEDS'), 
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Seeds planted"
-                        },
-                        {
-                            "measure": "count", 
-                            "value": this.numOfTrays,  //number of flats(trays)
-                            "unit": {
-                                "id": this.unitToIDMap.get('FLATS'), 
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Flats used"
-                        },
-                        {
-                            "measure": "ratio", 
-                            "value": this.numCellsPerTray,  //cells per flat
-                            "unit": {
-                                "id": this.unitToIDMap.get('CELLS/FLAT'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Cells/Flat"
-                        },
-                        {
-                            "measure": "time", 
-                            "value": time,  //hours worked
-                            "unit": {
-                                "id": this.unitToIDMap.get('HOURS'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Labor"
-                        },
-                        {
-                            "measure": "count", 
-                            "value": this.numWorkers,
-                            "unit": {
-                                "id": this.unitToIDMap.get('PEOPLE'),
-                                "resource": "taxonomy_term"
-                            },
-                            "label": "Workers"
-                        },
-                    ]
-                    return quantity 
-                },
-                pageLoaded() {
-                    // Check here that the correct number of API calls have completed.
-                    return this.createdCount == 9
-                },
-            },
-            created(){
-                let fullResponse = []
-                if(localStorage.getItem('crops') == null){
-                    getAllPages('/taxonomy_term.json?bundle=farm_crops',fullResponse)
-                        .then(() => {
-                            this.cropArray = fullResponse.map((h) => h.name)
-                            localStorage.setItem('crops', JSON.stringify(this.cropArray))
-                            this.createdCount++
-                        })
-                        .catch((err) => { 
-                            this.errBannerVisibility = true
-                        })
-                }else{
-                    this.cropArray = JSON.parse(localStorage.getItem('crops'))
-                    getAllPages('/taxonomy_term.json?bundle=farm_crops',fullResponse)
-                        .then(() => {
-                            this.cropArray = fullResponse.map((h) => h.name)
-                            localStorage.setItem('crops', JSON.stringify(this.cropArray))
-                            this.createdCount++
-                        })
-                        .catch((err) => { 
-                            this.errBannerVisibility = true
-                        })
-                }
-                if(localStorage.getItem('areas') == null){
-                    getAllPages('/taxonomy_term.json?bundle=farm_areas', this.areaResponse)
-                        .then(() => {
-                            localStorage.setItem('areas', JSON.stringify(this.areaResponse))
-                            this.createdCount++
-                        })
-                        .catch((err) => { 
-                            this.errBannerVisibility = true
-                        })
-                }else{
-                    this.areaResponse = JSON.parse(localStorage.getItem('areas'))
-                    getAllPages('/taxonomy_term.json?bundle=farm_areas')
-                        .then((resp) => {
-                            this.areaResponse = resp
-                            localStorage.setItem('areas', JSON.stringify(resp))
-                            this.createdCount++
-                        })
-                        .catch((err) => { 
-                            this.errBannerVisibility = true
-                        })
-                }
-                getSessionToken()
-                    .then((response) => {
-                        this.sessionToken = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getCropToIDMap()
-                    .then((response) => {
-                        this.cropToIDMap = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getUserToIDMap()
-                    .then((response) => {
-                        this.userToIDMap = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getAreaToIDMap()
-                    .then((response) => {
-                        this.areaToIDMap = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getUnitToIDMap()
-                    .then((response) => {
-                        this.unitToIDMap = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getLogTypeToIDMap()
-                    .then((response) => {
-                        this.logTypeToIDMap = response
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
-                getConfiguration()
-                    .then((response) => {
-                        this.configToIDMap = response.data
-                        if(this.configToIDMap.labor == "Optional") {
-                            this.regNumWorker = "|" + regexMap.regPosInt
-                            this.regMin = "|" + regexMap.regPosInt
-                            this.regHour = "|" + regexMap.regPosFloatTwoDigit
-                        }
-                        this.createdCount++
-                    })
-                    .catch((err) => { 
-                        this.errBannerVisibility = true
-                    })
+        createdCount: 0,
+      },
+      methods: {
+        updateValidMap(key, bool) {
+          this.validMap[key] = bool;
+        },
+        setNewDate(newDate) {
+          this.selectedDate = newDate;
+        },
+        setNewCrop(newCrop) {
+          this.selectedCrop = newCrop;
+        },
+        setNewArea(newArea) {
+          this.selectedArea = newArea;
+          this.savedArea = newArea;
+        },
+        setNewTimeUnit(newTimeUnit) {
+          this.selectedTimeUnit = newTimeUnit;
+        },
+        setNewFeetUnit(newFeetUnit) {
+          this.selectedFeetUnit = newFeetUnit;
+        },
+        setNewNumCellsPerTray(newNumCellsPerTray) {
+          this.numCellsPerTray = newNumCellsPerTray;
+        },
+        setNewNumOfTrays(newNumOfTrays) {
+          this.numOfTrays = newNumOfTrays;
+        },
+        setNewNumSeedsPlanted(newNumSeedsPlanted) {
+          this.numSeedsPlanted = newNumSeedsPlanted;
+        },
+        setNewNumRowBed(newNumRowBed) {
+          this.numRowBed = newNumRowBed;
+        },
+        setNewNumFeet(newNumFeet) {
+          this.numFeet = newNumFeet;
+        },
+        setNewNumWorkers(newNumWorkers) {
+          if (this.configToIDMap.labor == "Optional") {
+            if (newNumWorkers == "" || newNumWorkers == null) {
+              this.regMin = "|" + regexMap.regPosInt;
+              this.regHour = "|" + regexMap.regPosFloatTwoDigit;
+            } else {
+              this.regMin = regexMap.regPosInt;
+              this.regHour = regexMap.regPosFloatTwoDigit;
             }
-        })
-        Vue.config.devtools = true;
-    </script>
+          }
+          this.numWorkers = newNumWorkers;
+        },
+        setMinute(newMinute) {
+          if (this.configToIDMap.labor == "Optional") {
+            if (newMinute == "" || newMinute == null) {
+              this.regNumWorker = "|" + regexMap.regPosInt;
+            } else {
+              this.regNumWorker = regexMap.regPosInt;
+            }
+          }
+          this.minute = newMinute;
+        },
+        setHour(newHour) {
+          if (this.configToIDMap.labor == "Optional") {
+            if (newHour == "" || newHour == null) {
+              this.regNumWorker = "|" + regexMap.regPosInt;
+            } else {
+              this.regNumWorker = regexMap.regPosInt;
+            }
+          }
+          this.hour = newHour;
+        },
+        clearFields() {
+          this.selectedDate = dayjs().format("YYYY-MM-DD").toString();
+          this.selectedCrop = null;
+          this.selectedArea = null;
+          this.savedArea = null;
+          this.selectedSeedingType = "";
+          this.selectedFeetUnit = "Bed Feet";
+          this.selectedTimeUnit = "minutes";
+          this.comments = "";
+          this.numWorkers = null;
+          this.numOfTrays = null;
+          this.numCellsPerTray = null;
+          this.numSeedsPlanted = null;
+          this.numRowBed = null;
+          this.numFeet = null;
+          this.minute = null;
+          this.hour = null;
+        },
+        submitLog() {
+          this.submitInProgress = true;
+        },
+        saveLog() {
+          createRecord("/farm_asset", this.plantingLogData, this.sessionToken)
+            .then((response) => {
+              this.plantingId = response.data.id;
+            })
+            .then(() => {
+              createRecord("/log", this.logData, this.sessionToken).then(
+                (response) => {
+                  this.clearFields();
+                }
+              );
+              this.isConfirmed = true;
+              this.submitInProgress = false;
+              var successBanner = document.getElementById("scrollBanners");
+              var pageHeader = document.getElementById("navbar");
+              var headerBounds = pageHeader.getBoundingClientRect();
+              var alertBounds = successBanner.getBoundingClientRect();
+              scrollBy({
+                top: alertBounds.top - headerBounds.bottom,
+                behavior: "smooth",
+              });
+              setTimeout(() => {
+                this.isConfirmed = null;
+              }, 3000);
+            })
+            .catch((err) => {
+              this.errBannerVisibility = true;
+            });
+        },
+        cancelLog() {
+          this.submitInProgress = false;
+          this.isConfirmed = false;
+          var cancelBanner = document.getElementById("scrollBanners");
+          var pageHeader = document.getElementById("navbar");
+          var headerBounds = pageHeader.getBoundingClientRect();
+          var alertBounds = cancelBanner.getBoundingClientRect();
+          scrollBy({
+            top: alertBounds.top - headerBounds.bottom,
+            behavior: "smooth",
+          });
+          setTimeout(() => {
+            this.isConfirmed = null;
+          }, 3000);
+        },
+      },
+      computed: {
+        areaFilter() {
+          let areaArray = [];
+          if (this.selectedSeedingType == "Tray Seedings") {
+            let trayAreaOnly = this.areaResponse.filter(
+              (x) => x.area_type === "greenhouse"
+            );
+            areaArray = trayAreaOnly.map((h) => h.name);
+            if (!areaArray.includes(this.selectedArea)) {
+              this.selectedArea = null;
+            }
+            if (areaArray.includes(this.savedArea)) {
+              this.selectedArea = this.savedArea;
+            }
+          } else if (this.selectedSeedingType == "Direct Seedings") {
+            let directAreaOnly = this.areaResponse.filter(
+              (x) => x.area_type === "field" || x.area_type === "bed"
+            );
+            areaArray = directAreaOnly.map((h) => h.name);
+            if (!areaArray.includes(this.selectedArea)) {
+              this.selectedArea = null;
+            }
+            if (areaArray.includes(this.savedArea)) {
+              this.selectedArea = this.savedArea;
+            }
+          } else {
+            areaArray = this.areaResponse.map((h) => h.name);
+          }
+          return areaArray;
+        },
+        formNotCompleted() {
+          if (this.submitInProgress == true) {
+            return true;
+          }
+          if (this.selectedCrop == null) {
+            return true;
+          }
+          if (this.selectedArea == null) {
+            return true;
+          }
+
+          // Checking whether date is not completed
+          if (!this.selectedDate || !dayjs(this.selectedDate().isvalid())) {
+            return true;
+          }
+
+          if (this.selectedSeedingType == "") {
+            return true;
+          }
+          if (this.configToIDMap.labor == "Required") {
+            if (this.selectedTimeUnit == "minutes") {
+              if (!this.validMap["validMinute"]) {
+                return true;
+              }
+            }
+            if (this.selectedTimeUnit == "hours") {
+              if (!this.validMap["validHour"]) {
+                return true;
+              }
+            }
+            if (!this.validMap["validNumWorkers"]) {
+              return true;
+            }
+          }
+          if (this.configToIDMap.labor == "Optional") {
+            if (this.selectedTimeUnit == "minutes") {
+              if (
+                !this.validMap["validMinute"] ^
+                !this.validMap["validNumWorkers"]
+              ) {
+                return true;
+              }
+            }
+            if (this.selectedTimeUnit == "hours") {
+              if (
+                !this.validMap["validHours"] ^ !this.validMap["validNumWorkers"]
+              ) {
+                return true;
+              }
+            }
+          }
+          if (this.selectedSeedingType == "Direct Seedings") {
+            if (!this.validMap["validNumFeet"]) {
+              return true;
+            }
+            if (!this.validMap["validNumRowBed"]) {
+              return true;
+            }
+          }
+          if (this.selectedSeedingType == "Tray Seedings") {
+            if (!this.validMap["validNumCellsPerTray"]) {
+              return true;
+            }
+            if (!this.validMap["validNumOfTrays"]) {
+              return true;
+            }
+
+            if (!this.validMap["validNumSeedsPlanted"]) {
+              return true;
+            }
+          }
+
+          return false;
+        },
+        plantingLogData() {
+          planting = {
+            name:
+              this.selectedDate +
+              " " +
+              this.selectedCrop +
+              " " +
+              this.selectedArea,
+            type: "planting",
+            crop: [
+              {
+                id: this.cropToIDMap.get(this.selectedCrop),
+                resource: "taxonomy_term",
+              },
+            ],
+          };
+          return planting;
+        },
+        logData() {
+          let quantityUnits = [];
+          let seedingID = 0;
+          if (this.selectedSeedingType == "Direct Seedings") {
+            quantityUnits = this.quantityDirectSeeding;
+            seedingID = this.logTypeToIDMap.get("Direct Seedings");
+          } else if (this.selectedSeedingType == "Tray Seedings") {
+            quantityUnits = this.quantityTraySeeding;
+            seedingID = this.logTypeToIDMap.get("Tray Seedings");
+          }
+          seeding = {
+            name:
+              this.selectedDate +
+              " " +
+              this.selectedCrop +
+              " " +
+              this.selectedArea,
+            type: "farm_seeding",
+            timestamp: dayjs(this.selectedDate).unix(),
+            done: "1", //any seeding recorded is done.
+            notes: {
+              value: this.comments,
+              format: "farm_format",
+            },
+            asset: [
+              {
+                id: this.plantingId, //Associated planting
+                resource: "farm_asset",
+              },
+            ],
+            log_category: [
+              {
+                id: seedingID,
+                resource: "taxonomy_term",
+              },
+            ],
+            movement: {
+              area: [
+                {
+                  id: this.areaToIDMap.get(this.selectedArea),
+                  resource: "taxonomy_term",
+                },
+              ],
+            },
+            quantity: quantityUnits,
+            created: dayjs().unix(),
+            lot_number: "N/A (No Variety)",
+            data: {
+              crop_tid: this.cropToIDMap.get(this.selectedCrop),
+            },
+          };
+          return seeding;
+        },
+        quantityDirectSeeding() {
+          let time = this.hour;
+          let feet = this.numFeet;
+          if (this.selectedTimeUnit == "minutes") {
+            time = this.minute;
+            time = Math.round((time / 60) * 100) / 100;
+          }
+          if (this.selectedFeetUnit == "Bed Feet") {
+            feet = feet * this.numRowBed;
+          }
+          quantity = [
+            {
+              measure: "length",
+              value: feet, //total row feet
+              unit: {
+                id: this.unitToIDMap.get("ROW FEET"),
+                resource: "taxonomy_term",
+              },
+              label: "Amount planted",
+            },
+            {
+              measure: "ratio",
+              value: this.numRowBed,
+              unit: {
+                id: this.unitToIDMap.get("ROWS/BED"),
+                resource: "taxonomy_term",
+              },
+              label: "Rows/Bed",
+            },
+            {
+              measure: "time",
+              value: time,
+              unit: {
+                id: this.unitToIDMap.get("HOURS"),
+                resource: "taxonomy_term",
+              },
+              label: "Labor",
+            },
+            {
+              measure: "count",
+              value: this.numWorkers,
+              unit: {
+                id: this.unitToIDMap.get("PEOPLE"),
+                resource: "taxonomy_term",
+              },
+              label: "Workers",
+            },
+          ];
+          return quantity;
+        },
+        quantityTraySeeding() {
+          let time = this.hour;
+          if (this.selectedTimeUnit == "minutes") {
+            time = this.minute;
+            time = Math.round((time / 60) * 100) / 100;
+          }
+          quantity = [
+            {
+              measure: "count",
+              value: this.numSeedsPlanted, //number of seed planted
+              unit: {
+                id: this.unitToIDMap.get("SEEDS"),
+                resource: "taxonomy_term",
+              },
+              label: "Seeds planted",
+            },
+            {
+              measure: "count",
+              value: this.numOfTrays, //number of flats(trays)
+              unit: {
+                id: this.unitToIDMap.get("FLATS"),
+                resource: "taxonomy_term",
+              },
+              label: "Flats used",
+            },
+            {
+              measure: "ratio",
+              value: this.numCellsPerTray, //cells per flat
+              unit: {
+                id: this.unitToIDMap.get("CELLS/FLAT"),
+                resource: "taxonomy_term",
+              },
+              label: "Cells/Flat",
+            },
+            {
+              measure: "time",
+              value: time, //hours worked
+              unit: {
+                id: this.unitToIDMap.get("HOURS"),
+                resource: "taxonomy_term",
+              },
+              label: "Labor",
+            },
+            {
+              measure: "count",
+              value: this.numWorkers,
+              unit: {
+                id: this.unitToIDMap.get("PEOPLE"),
+                resource: "taxonomy_term",
+              },
+              label: "Workers",
+            },
+          ];
+          return quantity;
+        },
+        pageLoaded() {
+          // Check here that the correct number of API calls have completed.
+          return this.createdCount == 9;
+        },
+      },
+      created() {
+        let fullResponse = [];
+        if (localStorage.getItem("crops") == null) {
+          getAllPages("/taxonomy_term.json?bundle=farm_crops", fullResponse)
+            .then(() => {
+              this.cropArray = fullResponse.map((h) => h.name);
+              localStorage.setItem("crops", JSON.stringify(this.cropArray));
+              this.createdCount++;
+            })
+            .catch((err) => {
+              this.errBannerVisibility = true;
+            });
+        } else {
+          this.cropArray = JSON.parse(localStorage.getItem("crops"));
+          getAllPages("/taxonomy_term.json?bundle=farm_crops", fullResponse)
+            .then(() => {
+              this.cropArray = fullResponse.map((h) => h.name);
+              localStorage.setItem("crops", JSON.stringify(this.cropArray));
+              this.createdCount++;
+            })
+            .catch((err) => {
+              this.errBannerVisibility = true;
+            });
+        }
+        if (localStorage.getItem("areas") == null) {
+          getAllPages(
+            "/taxonomy_term.json?bundle=farm_areas",
+            this.areaResponse
+          )
+            .then(() => {
+              localStorage.setItem("areas", JSON.stringify(this.areaResponse));
+              this.createdCount++;
+            })
+            .catch((err) => {
+              this.errBannerVisibility = true;
+            });
+        } else {
+          this.areaResponse = JSON.parse(localStorage.getItem("areas"));
+          getAllPages("/taxonomy_term.json?bundle=farm_areas")
+            .then((resp) => {
+              this.areaResponse = resp;
+              localStorage.setItem("areas", JSON.stringify(resp));
+              this.createdCount++;
+            })
+            .catch((err) => {
+              this.errBannerVisibility = true;
+            });
+        }
+        getSessionToken()
+          .then((response) => {
+            this.sessionToken = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getCropToIDMap()
+          .then((response) => {
+            this.cropToIDMap = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getUserToIDMap()
+          .then((response) => {
+            this.userToIDMap = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getAreaToIDMap()
+          .then((response) => {
+            this.areaToIDMap = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getUnitToIDMap()
+          .then((response) => {
+            this.unitToIDMap = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getLogTypeToIDMap()
+          .then((response) => {
+            this.logTypeToIDMap = response;
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+        getConfiguration()
+          .then((response) => {
+            this.configToIDMap = response.data;
+            if (this.configToIDMap.labor == "Optional") {
+              this.regNumWorker = "|" + regexMap.regPosInt;
+              this.regMin = "|" + regexMap.regPosInt;
+              this.regHour = "|" + regexMap.regPosFloatTwoDigit;
+            }
+            this.createdCount++;
+          })
+          .catch((err) => {
+            this.errBannerVisibility = true;
+          });
+      },
+    });
+    Vue.config.devtools = true;
+  </script>
 </body>
