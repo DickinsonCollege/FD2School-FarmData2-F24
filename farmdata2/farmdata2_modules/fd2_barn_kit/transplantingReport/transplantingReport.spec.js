@@ -27,7 +27,7 @@ describe('Testing for the transplanting report page', () => {
         // Wait here for the maps to load in the page.   
         cy.waitForPage()
     })
-
+    
     context('can set dates and then render the report', () => {
 
         it('allows user input of the start and end dates', () => {
