@@ -789,11 +789,12 @@
                     }
                     return areaNameArray
                 },
-
+    
                 cropNameArray(){
                     let cropNameArray = []
-                    for(let [key, info] of this.cropToIDMap){
-                        cropNameArray.push(key)
+                    const cropKeyIterator = this.cropToIDMap.keys()
+                    for(i = 0; i < this.cropToIDMap.size; i++){
+                        cropNameArray.push(cropKeyIterator.next().value)
                     }
                     return cropNameArray
                 },
@@ -845,10 +846,6 @@
                 getCropToIDMap()
                     .then((response) => {
                         this.cropToIDMap = new Map(response)
-                        this.cropNameArray = []
-                        for(let [key, info] of this.cropToIDMap){
-                            this.cropNameArray.push(key)
-                        }
                         this.createdCount++
                     })
                     .catch((err) => { 
